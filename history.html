@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<script>(function(){try{document.documentElement.setAttribute("data-theme", localStorage.getItem("nexura:theme")||"light");}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nexura — Historial</title>
+<link rel="stylesheet" href="css/style.css" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSI0IiB5MT0iNiIgeDI9IjQ0IiB5Mj0iNDIiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZjBjMTdlIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2M5NzkzYyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iMTIiIGZpbGw9InVybCgjZykiLz4KICA8cGF0aCBkPSJNMTUgMzRWMTQuNmMwLS45IDEuMDgtMS4zNiAxLjczLS43M0wzMiAyOC43VjE0IiBzdHJva2U9IiMxNDE2MWEiIHN0cm9rZS13aWR0aD0iMy42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGZpbGw9Im5vbmUiLz4KPC9zdmc+Cg==" />
+</head>
+<body>
+
+<div class="app-shell">
+  <nav class="sidebar" id="shell-sidebar"></nav>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1>Historial</h1>
+        <div class="subtitle">Movimientos y transferencias, todo en un solo lugar.</div>
+      </div>
+      <div class="topbar-actions" id="shell-topbar-right"></div>
+    </div>
+
+    <div class="card card-pad reveal">
+      <div class="toolbar">
+        <div class="search-box">
+          <input type="text" id="search-input" placeholder="Buscar descripción, destinatario, categoría…" />
+        </div>
+        <select class="select-filter" id="type-filter">
+          <option value="all">Todos los tipos</option>
+          <option value="credit">Créditos</option>
+          <option value="debit">Débitos</option>
+          <option value="transfer">Transferencias</option>
+        </select>
+        <select class="select-filter" id="status-filter">
+          <option value="all">Todos los estados</option>
+          <option value="pending">Pendiente</option>
+          <option value="review">En Revisión</option>
+          <option value="verified">Verificado</option>
+          <option value="processing">Procesando</option>
+          <option value="transferred">Transferido</option>
+          <option value="completed">Completado</option>
+          <option value="cancelled">Cancelado</option>
+        </select>
+        <button class="btn btn-secondary" id="export-csv-btn">Exportar CSV</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th data-sort="date">Fecha <span class="arrow" id="arrow-date">↓</span></th>
+              <th data-sort="label">Descripción</th>
+              <th data-sort="amount">Monto <span class="arrow" id="arrow-amount"></span></th>
+              <th data-sort="status">Estado <span class="arrow" id="arrow-status"></span></th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+
+      <div id="empty-host"></div>
+
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </main>
+</div>
+
+<script src="js/data-service.js"></script>
+<script src="js/shell.js"></script>
+<script>
+let currentUser = null;
+let allRows = [];
+let sortKey = "date";
+let sortDir = -1;
+let page = 1;
+const PAGE_SIZE = 8;
+
+async function main() {
+  currentUser = await Shell.requireClientSession();
+  if (!currentUser) return;
+  await Shell.renderShell("history", currentUser);
+
+  document.querySelector(".search-box").innerHTML = Shell.ICONS.search + document.querySelector(".search-box").innerHTML;
+
+  document.getElementById("table-body").innerHTML = `<tr><td colspan="4"><div class="skeleton skeleton-line" style="width:100%; height:44px;"></div></td></tr>`.repeat(4);
+  await Shell.wait(300);
+
+  const [txns, transfers] = await Promise.all([
+    DataService.getTransactions(currentUser.id),
+    DataService.getTransfers(currentUser.id),
+  ]);
+
+  const txnRows = txns.map(t => ({
+    id: t.id, kind: t.type, label: t.label, sub: t.category,
+    amount: t.type === "credit" ? t.amount : -t.amount, status: t.status, date: t.date,
+  }));
+  const transferRows = transfers.map(t => ({
+    id: t.id, kind: "transfer", label: `Transferencia → ${t.beneficiaryName}`, sub: t.reference,
+    amount: -t.amount, status: t.status, date: t.date,
+  }));
+
+  allRows = [...txnRows, ...transferRows];
+
+  document.getElementById("search-input").addEventListener("input", () => { page = 1; render(); });
+  document.getElementById("type-filter").addEventListener("change", () => { page = 1; render(); });
+  document.getElementById("status-filter").addEventListener("change", () => { page = 1; render(); });
+  document.getElementById("export-csv-btn").addEventListener("click", exportCSV);
+  document.querySelectorAll("thead th[data-sort]").forEach(th => {
+    th.addEventListener("click", () => {
+      const key = th.dataset.sort;
+      if (sortKey === key) sortDir *= -1; else { sortKey = key; sortDir = -1; }
+      updateArrows();
+      render();
+    });
+  });
+
+  updateArrows();
+  render();
+}
+
+function updateArrows() {
+  ["date", "amount", "status"].forEach(k => {
+    document.getElementById(`arrow-${k}`).textContent = sortKey === k ? (sortDir === -1 ? "↓" : "↑") : "";
+  });
+}
+
+function getFiltered() {
+  const q = document.getElementById("search-input").value.trim().toLowerCase();
+  const type = document.getElementById("type-filter").value;
+  const status = document.getElementById("status-filter").value;
+
+  let rows = allRows.filter(r => {
+    if (type !== "all" && r.kind !== type) return false;
+    if (status !== "all" && r.status !== status) return false;
+    if (q && !(r.label.toLowerCase().includes(q) || (r.sub || "").toLowerCase().includes(q))) return false;
+    return true;
+  });
+
+  rows.sort((a, b) => {
+    let va = a[sortKey], vb = b[sortKey];
+    if (sortKey === "date") { va = new Date(va).getTime(); vb = new Date(vb).getTime(); }
+    if (sortKey === "amount") { va = Math.abs(va); vb = Math.abs(vb); }
+    if (va < vb) return -1 * sortDir;
+    if (va > vb) return 1 * sortDir;
+    return 0;
+  });
+
+  return rows;
+}
+
+function render() {
+  const rows = getFiltered();
+  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  page = Math.min(page, totalPages);
+  const pageRows = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const tbody = document.getElementById("table-body");
+  const emptyHost = document.getElementById("empty-host");
+
+  if (pageRows.length === 0) {
+    tbody.innerHTML = "";
+    if (allRows.length === 0) {
+      emptyHost.innerHTML = `<div class="empty-state"><h3>No hay movimientos registrados.</h3><p>No hay transferencias registradas. No hay actividad reciente.</p></div>`;
+    } else {
+      emptyHost.innerHTML = `<div class="empty-state"><h3>Sin resultados</h3><p>Ajuste su búsqueda o filtros.</p></div>`;
+    }
+  } else {
+    emptyHost.innerHTML = "";
+    tbody.innerHTML = pageRows.map(r => `
+      <tr>
+        <td>${Shell.fmtDate(r.date)}</td>
+        <td>
+          <div style="font-weight:500;">${r.label}</div>
+          <div style="font-size:11.5px; color:var(--text-low); margin-top:2px;">${r.sub || ""}</div>
+        </td>
+        <td class="num"><span class="txn-amount ${r.amount >= 0 ? "credit" : "debit"}">${r.amount >= 0 ? "+" : "−"}${Shell.fmtUSD(Math.abs(r.amount))}</span></td>
+        <td><span class="status-pill ${r.status === "completed" ? "completed" : r.status === "cancelled" ? "rejected" : "pending"}">${DataService.STATUS_LABELS[r.status] || r.status}</span></td>
+      </tr>
+    `).join("");
+  }
+
+  renderPagination(totalPages, rows.length);
+}
+
+function renderPagination(totalPages, total) {
+  const host = document.getElementById("pagination");
+  let pages = "";
+  for (let i = 1; i <= totalPages; i++) {
+    pages += `<button class="page-btn ${i === page ? "active" : ""}" data-page="${i}">${i}</button>`;
+  }
+  host.innerHTML = `<div>${total} resultado${total !== 1 ? "s" : ""}</div><div class="pages">${pages}</div>`;
+  host.querySelectorAll(".page-btn").forEach(btn => {
+    btn.addEventListener("click", () => { page = parseInt(btn.dataset.page, 10); render(); });
+  });
+}
+
+function exportCSV() {
+  const rows = getFiltered();
+  if (rows.length === 0) { Shell.toast("No hay datos para exportar", "error"); return; }
+  const header = ["Fecha", "Descripción", "Monto", "Estado"];
+  const lines = rows.map(r => [
+    Shell.fmtDate(r.date),
+    `"${r.label.replace(/"/g, '""')}"`,
+    (r.amount >= 0 ? "+" : "-") + Math.abs(r.amount).toFixed(2),
+    DataService.STATUS_LABELS[r.status] || r.status,
+  ].join(","));
+  const csv = [header.join(","), ...lines].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `historial-nexura-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  Shell.toast("Historial exportado");
+}
+
+main();
+</script>
+</body>
+</html>

@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<script>(function(){try{document.documentElement.setAttribute("data-theme", localStorage.getItem("nexura:theme")||"light");}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nexura — Transferencias</title>
+<link rel="stylesheet" href="css/style.css" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSI0IiB5MT0iNiIgeDI9IjQ0IiB5Mj0iNDIiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZjBjMTdlIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2M5NzkzYyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iMTIiIGZpbGw9InVybCgjZykiLz4KICA8cGF0aCBkPSJNMTUgMzRWMTQuNmMwLS45IDEuMDgtMS4zNiAxLjczLS43M0wzMiAyOC43VjE0IiBzdHJva2U9IiMxNDE2MWEiIHN0cm9rZS13aWR0aD0iMy42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGZpbGw9Im5vbmUiLz4KPC9zdmc+Cg==" />
+</head>
+<body>
+
+<div class="app-shell">
+  <nav class="sidebar" id="shell-sidebar"></nav>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1>Nueva Transferencia</h1>
+        <div class="subtitle">Complete la información bancaria del destinatario.</div>
+      </div>
+      <div class="topbar-actions" id="shell-topbar-right"></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card card-pad reveal" id="form-panel">
+        <div class="section-title"><h2>Información Bancaria</h2></div>
+        <form id="transfer-form">
+          <div class="field">
+            <label for="transfer-type">Tipo de Transferencia</label>
+            <select id="transfer-type">
+              <option value="interna">Transferencia Interna</option>
+              <option value="programada">Transferencia Programada</option>
+            </select>
+          </div>
+          <div class="field" id="scheduled-date-field" style="display:none;">
+            <label for="scheduled-date">Fecha Programada</label>
+            <input type="date" id="scheduled-date" />
+          </div>
+          <div class="field">
+            <label for="benef-name">Nombre del Titular</label>
+            <input type="text" id="benef-name" placeholder="Ej. Juan Pérez" required />
+          </div>
+          <div class="field">
+            <label for="benef-account">Número de Cuenta</label>
+            <input type="text" id="benef-account" placeholder="Ej. 0021 4487 9012" required />
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="benef-bank">Banco Receptor</label>
+              <input type="text" id="benef-bank" placeholder="Ej. Banco Nacional" />
+            </div>
+            <div class="field">
+              <label for="account-type">Tipo de Cuenta</label>
+              <select id="account-type">
+                <option value="Cuenta Corriente">Cuenta Corriente (Checking)</option>
+                <option value="Cuenta de Ahorros">Cuenta de Ahorros (Savings)</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="amount">Monto</label>
+            <input type="number" id="amount" min="0.01" step="0.01" placeholder="0.00" required />
+          </div>
+          <div class="field">
+            <label for="note">Motivo (opcional)</label>
+            <textarea id="note" rows="2" placeholder="Ej. Pago de servicios, reembolso…"></textarea>
+          </div>
+          <div class="field">
+            <span class="hint" id="available-hint"></span>
+          </div>
+          <div class="field" style="flex-direction:row; align-items:center; gap:10px;">
+            <input type="checkbox" id="save-beneficiary-check" style="width:auto;" />
+            <label for="save-beneficiary-check" style="margin:0;">Guardar como beneficiario</label>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="submit-btn">Solicitar Transferencia</button>
+        </form>
+      </div>
+
+      <div class="card card-pad reveal d1">
+        <div class="section-title">
+          <h2>Beneficiarios Guardados</h2>
+          <button class="btn btn-ghost" id="new-beneficiary-btn" style="padding:6px 12px; font-size:12px;">+ Agregar</button>
+        </div>
+        <div id="beneficiary-list"></div>
+      </div>
+
+      <div class="card card-pad reveal d2" style="margin-top:18px;">
+        <div class="section-title"><h2>Información Importante</h2></div>
+        <div style="display:flex; flex-direction:column; gap:16px; font-size:13px; color:var(--text-mid); line-height:1.6;">
+          <div>Al enviar su solicitud se genera automáticamente un recibo con número de referencia único.</div>
+          <div>Su solicitud puede pasar por distintos estados (Pendiente, En Revisión, Procesando…) antes de completarse.</div>
+          <div class="sandbox-pill" style="width:fit-content;"><span class="dot"></span> Ningún fondo real es transferido</div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Beneficiary modal -->
+<div class="modal-backdrop" id="beneficiary-backdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="beneficiary-modal-title">Nuevo Beneficiario</h3>
+      <button class="modal-close" id="close-beneficiary">&times;</button>
+    </div>
+    <div class="field"><label>Nombre</label><input type="text" id="b-name" /></div>
+    <div class="field"><label>Número de Cuenta</label><input type="text" id="b-account" /></div>
+    <div class="field-row">
+      <div class="field"><label>Banco</label><input type="text" id="b-bank" placeholder="Opcional" /></div>
+      <div class="field">
+        <label>Tipo de Cuenta</label>
+        <select id="b-account-type">
+          <option value="Cuenta Corriente">Cuenta Corriente</option>
+          <option value="Cuenta de Ahorros">Cuenta de Ahorros</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-block" id="save-beneficiary-btn">Guardar Beneficiario</button>
+  </div>
+</div>
+
+<!-- Receipt modal -->
+<div class="modal-backdrop" id="receipt-backdrop">
+  <div class="modal" style="max-width: 460px;">
+    <div class="modal-head">
+      <h3>Recibo de Transferencia</h3>
+      <button class="modal-close" id="close-receipt">&times;</button>
+    </div>
+
+    <div class="receipt" id="receipt-content">
+      <div class="receipt-head">
+        <div class="receipt-brand">Nexura<span>Recibo de Transferencia</span></div>
+        <div class="receipt-status">
+          <span class="status-pill completed" id="receipt-status">Completado</span>
+        </div>
+      </div>
+
+      <div class="receipt-amount">
+        <div style="font-size:11px; color:#948c7c; text-transform:uppercase; letter-spacing:.08em;">Monto Transferido</div>
+        <div class="v" id="receipt-amount">$0.00</div>
+      </div>
+
+      <div class="receipt-row"><div class="k">Tipo</div><div class="v" id="receipt-type">—</div></div>
+      <div class="receipt-row"><div class="k">Número de Referencia</div><div class="v" id="receipt-ref">—</div></div>
+      <div class="receipt-row"><div class="k">Fecha</div><div class="v" id="receipt-date">—</div></div>
+      <div class="receipt-row"><div class="k">Hora</div><div class="v" id="receipt-time">—</div></div>
+      <div class="receipt-row"><div class="k">Nombre del Titular</div><div class="v" id="receipt-benef">—</div></div>
+      <div class="receipt-row"><div class="k">Banco Receptor</div><div class="v" id="receipt-bank">—</div></div>
+      <div class="receipt-row"><div class="k">Número de Cuenta</div><div class="v" id="receipt-account">—</div></div>
+      <div class="receipt-row"><div class="k">Estado</div><div class="v" id="receipt-status-text">—</div></div>
+
+      <div class="receipt-foot">
+        Este documento certifica una operación realizada en el Entorno de Prueba de Nexura, únicamente con fines de demostración. No constituye comprobante de una transferencia bancaria real y no tiene valor legal ni contable.
+        <div class="receipt-sig" id="receipt-sig">FIRMA DIGITAL · —</div>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:20px;">
+      <button class="btn btn-secondary" style="flex:1;" id="print-receipt">Imprimir</button>
+      <button class="btn btn-primary" style="flex:1;" id="download-receipt">Descargar</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/data-service.js"></script>
+<script src="js/shell.js"></script>
+<script>
+let currentUser = null;
+let beneficiaries = [];
+let editingBeneficiaryId = null;
+
+async function main() {
+  currentUser = await Shell.requireClientSession();
+  if (!currentUser) return;
+  await Shell.renderShell("transfer", currentUser);
+
+  document.getElementById("available-hint").textContent = `Saldo disponible: ${Shell.fmtUSD(currentUser.available)}`;
+
+  document.getElementById("beneficiary-list").innerHTML = Shell.skeletonRows(3);
+  beneficiaries = await DataService.getBeneficiaries(currentUser.id);
+  await Shell.wait(250);
+  renderBeneficiaries();
+
+  document.getElementById("transfer-type").addEventListener("change", (e) => {
+    document.getElementById("scheduled-date-field").style.display = e.target.value === "programada" ? "block" : "none";
+  });
+
+  document.getElementById("transfer-form").addEventListener("submit", handleSubmit);
+  document.getElementById("close-receipt").addEventListener("click", closeReceipt);
+  document.getElementById("receipt-backdrop").addEventListener("click", (e) => {
+    if (e.target.id === "receipt-backdrop") closeReceipt();
+  });
+  document.getElementById("print-receipt").addEventListener("click", () => window.print());
+  document.getElementById("download-receipt").addEventListener("click", downloadReceipt);
+
+  document.getElementById("new-beneficiary-btn").addEventListener("click", () => openBeneficiaryModal());
+  document.getElementById("close-beneficiary").addEventListener("click", () => toggleBeneficiaryModal(false));
+  document.getElementById("beneficiary-backdrop").addEventListener("click", (e) => { if (e.target.id === "beneficiary-backdrop") toggleBeneficiaryModal(false); });
+  document.getElementById("save-beneficiary-btn").addEventListener("click", saveBeneficiary);
+}
+
+function renderBeneficiaries() {
+  const host = document.getElementById("beneficiary-list");
+  if (beneficiaries.length === 0) {
+    host.innerHTML = `<div class="empty-state" style="padding:30px 10px;"><p>No hay beneficiarios guardados.</p></div>`;
+    return;
+  }
+  host.innerHTML = beneficiaries.map(b => `
+    <div class="beneficiary-row">
+      <div class="b-icon">${Shell.initials(b.name)}</div>
+      <div class="b-main">
+        <div class="b-name">${b.name}</div>
+        <div class="b-sub">${Shell.maskAccount(b.account)} · ${b.bank || "Nexura Bank"}</div>
+      </div>
+      <div style="display:flex; gap:6px;">
+        <button class="btn btn-ghost" data-use="${b.id}" style="padding:6px 10px; font-size:11.5px;">Usar</button>
+        <button class="btn btn-ghost" data-edit="${b.id}" style="padding:6px 10px; font-size:11.5px;">Editar</button>
+        <button class="btn btn-danger" data-del="${b.id}" style="padding:6px 10px; font-size:11.5px;">Eliminar</button>
+      </div>
+    </div>
+  `).join("");
+
+  host.querySelectorAll("button[data-use]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const b = beneficiaries.find(x => x.id === btn.dataset.use);
+      if (!b) return;
+      document.getElementById("benef-name").value = b.name;
+      document.getElementById("benef-account").value = b.account;
+      document.getElementById("benef-bank").value = b.bank || "";
+      document.getElementById("account-type").value = b.accountType || "Cuenta Corriente";
+      document.getElementById("amount").focus();
+      Shell.toast("Beneficiario cargado en el formulario");
+    });
+  });
+  host.querySelectorAll("button[data-edit]").forEach(btn => {
+    btn.addEventListener("click", () => openBeneficiaryModal(btn.dataset.edit));
+  });
+  host.querySelectorAll("button[data-del]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      await DataService.deleteBeneficiary(btn.dataset.del);
+      beneficiaries = await DataService.getBeneficiaries(currentUser.id);
+      renderBeneficiaries();
+      Shell.toast("Beneficiario eliminado");
+    });
+  });
+}
+
+function openBeneficiaryModal(id) {
+  editingBeneficiaryId = id || null;
+  const b = id ? beneficiaries.find(x => x.id === id) : null;
+  document.getElementById("beneficiary-modal-title").textContent = b ? "Editar Beneficiario" : "Nuevo Beneficiario";
+  document.getElementById("b-name").value = b ? b.name : "";
+  document.getElementById("b-account").value = b ? b.account : "";
+  document.getElementById("b-bank").value = b ? (b.bank || "") : "";
+  document.getElementById("b-account-type").value = b ? (b.accountType || "Cuenta Corriente") : "Cuenta Corriente";
+  toggleBeneficiaryModal(true);
+}
+
+function toggleBeneficiaryModal(open) {
+  document.getElementById("beneficiary-backdrop").classList.toggle("open", open);
+}
+
+async function saveBeneficiary() {
+  const name = document.getElementById("b-name").value.trim();
+  const account = document.getElementById("b-account").value.trim();
+  const bank = document.getElementById("b-bank").value.trim();
+  const accountType = document.getElementById("b-account-type").value;
+  if (!name || !account) { Shell.toast("Nombre y número de cuenta son obligatorios", "error"); return; }
+
+  if (editingBeneficiaryId) {
+    await DataService.updateBeneficiary(editingBeneficiaryId, { name, account, bank, accountType });
+    Shell.toast("Beneficiario actualizado");
+  } else {
+    await DataService.addBeneficiary({ userId: currentUser.id, name, account, bank, accountType });
+    Shell.toast("Beneficiario guardado");
+  }
+  beneficiaries = await DataService.getBeneficiaries(currentUser.id);
+  renderBeneficiaries();
+  toggleBeneficiaryModal(false);
+}
+
+async function handleSubmit(e) {
+  e.preventDefault();
+  const btn = document.getElementById("submit-btn");
+  const transferType = document.getElementById("transfer-type").value;
+  const scheduledDate = document.getElementById("scheduled-date").value || null;
+  const name = document.getElementById("benef-name").value.trim();
+  const account = document.getElementById("benef-account").value.trim();
+  const bank = document.getElementById("benef-bank").value.trim();
+  const accountType = document.getElementById("account-type").value;
+  const amount = parseFloat(document.getElementById("amount").value);
+  const note = document.getElementById("note").value.trim();
+
+  if (!name || !account || !amount) return;
+  if (transferType === "programada" && !scheduledDate) {
+    Shell.toast("Seleccione una fecha para la transferencia programada", "error");
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "Procesando…";
+
+  try {
+    const transfer = await DataService.createTransfer({
+      userId: currentUser.id,
+      beneficiaryName: name,
+      beneficiaryAccount: account,
+      beneficiaryBank: bank,
+      accountType,
+      amount,
+      note,
+      transferType,
+      scheduledDate,
+      status: transferType === "programada" ? "pending" : "pending",
+    });
+    currentUser = await DataService.getUser(currentUser.id);
+    showReceipt(transfer);
+
+    const shouldSave = document.getElementById("save-beneficiary-check").checked;
+    if (shouldSave) {
+      const exists = beneficiaries.some(b => b.account.replace(/\s/g, "") === account.replace(/\s/g, ""));
+      if (!exists) {
+        await DataService.addBeneficiary({ userId: currentUser.id, name, account, bank, accountType });
+        beneficiaries = await DataService.getBeneficiaries(currentUser.id);
+        renderBeneficiaries();
+      }
+    }
+
+    document.getElementById("transfer-form").reset();
+    document.getElementById("available-hint").textContent = `Saldo disponible: ${Shell.fmtUSD(currentUser.available)}`;
+    Shell.toast("Solicitud de transferencia enviada");
+  } catch (err) {
+    Shell.toast(err.message || "Ocurrió un error", "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Solicitar Transferencia";
+  }
+}
+
+function showReceipt(transfer) {
+  document.getElementById("receipt-type").textContent = transfer.transferType === "programada"
+    ? `Transferencia Programada${transfer.scheduledDate ? " · " + Shell.fmtDate(transfer.scheduledDate) : ""}`
+    : "Transferencia Interna";
+  document.getElementById("receipt-amount").textContent = Shell.fmtUSD(transfer.amount);
+  document.getElementById("receipt-ref").textContent = transfer.reference;
+  document.getElementById("receipt-date").textContent = Shell.fmtDate(transfer.date);
+  document.getElementById("receipt-time").textContent = Shell.fmtTime(transfer.date);
+  document.getElementById("receipt-benef").textContent = transfer.beneficiaryName;
+  document.getElementById("receipt-bank").textContent = transfer.beneficiaryBank || "—";
+  document.getElementById("receipt-account").textContent = Shell.maskAccount(transfer.beneficiaryAccount);
+  document.getElementById("receipt-sig").textContent = `FIRMA DIGITAL · ${transfer.reference} · NEXURA-SANDBOX`;
+  const label = DataService.STATUS_LABELS[transfer.status] || transfer.status;
+  document.getElementById("receipt-status-text").textContent = label;
+  const pill = document.getElementById("receipt-status");
+  pill.textContent = label;
+  pill.className = `status-pill ${transfer.status === "completed" ? "completed" : transfer.status === "cancelled" ? "rejected" : "pending"}`;
+
+  document.getElementById("receipt-backdrop").classList.add("open");
+}
+
+function closeReceipt() {
+  document.getElementById("receipt-backdrop").classList.remove("open");
+}
+
+function downloadReceipt() {
+  const html = document.getElementById("receipt-content").outerHTML;
+  const doc = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Recibo Nexura</title>
+  <link rel="stylesheet" href="${location.origin}${location.pathname.replace(/transfer\.html$/, "")}css/style.css">
+  <style>body{background:#fbf9f4;padding:30px;} .receipt{max-width:480px;margin:0 auto;box-shadow:0 10px 40px rgba(0,0,0,.12);}</style>
+  </head><body>${html}</body></html>`;
+  const blob = new Blob([doc], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `recibo-nexura-${document.getElementById("receipt-ref").textContent}.html`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+main();
+</script>
+</body>
+</html>

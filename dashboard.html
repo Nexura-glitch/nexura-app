@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<script>(function(){try{document.documentElement.setAttribute("data-theme", localStorage.getItem("nexura:theme")||"light");}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nexura — Panel Principal</title>
+<link rel="stylesheet" href="css/style.css" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSI0IiB5MT0iNiIgeDI9IjQ0IiB5Mj0iNDIiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZjBjMTdlIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2M5NzkzYyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iMTIiIGZpbGw9InVybCgjZykiLz4KICA8cGF0aCBkPSJNMTUgMzRWMTQuNmMwLS45IDEuMDgtMS4zNiAxLjczLS43M0wzMiAyOC43VjE0IiBzdHJva2U9IiMxNDE2MWEiIHN0cm9rZS13aWR0aD0iMy42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGZpbGw9Im5vbmUiLz4KPC9zdmc+Cg==" />
+</head>
+<body>
+<div class="splash-screen" id="splash-screen">
+  <div class="splash-logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none"><defs><linearGradient id="nexuraGrad" x1="4" y1="6" x2="44" y2="42" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#f0c17e"/><stop offset="1" stop-color="#c9793c"/></linearGradient></defs><rect x="1" y="1" width="46" height="46" rx="13" fill="url(#nexuraGrad)"/><path d="M15 34V14.6c0-.9 1.08-1.36 1.73-.73L32 28.7V14" stroke="#14161a" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div>
+  <div class="splash-brand">NEXURA</div>
+  <div class="splash-bar"><span></span></div>
+</div>
+
+<div class="app-shell">
+  <nav class="sidebar" id="shell-sidebar"></nav>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1 id="greeting">Bienvenido 👋</h1>
+        <div class="subtitle" id="today"></div>
+      </div>
+      <div class="topbar-actions" id="shell-topbar-right"></div>
+    </div>
+
+    <!-- Balance hero + Debit card -->
+    <div class="hero-grid">
+    <div class="balance-plain reveal">
+      <div class="balance-plain-top">
+        <div class="balance-eyebrow">Saldo Disponible</div>
+        <div class="chip chip-plain" id="account-chip">•••• ••••</div>
+      </div>
+      <div class="balance-figure-plain" id="balance-figure">— </div>
+      <div class="balance-inline-meta">
+        <span><span class="k">Disponible</span> <b id="available-value">—</b></span>
+        <span class="dot-sep">•</span>
+        <span><span class="k">Estado</span> <b id="account-status-value">—</b></span>
+        <span class="dot-sep">•</span>
+        <span><span class="k">Verificación</span> <b id="verif-value">—</b></span>
+      </div>
+    </div>
+
+    <div class="card-panel reveal d1">
+      <div class="debit-card">
+        <div class="card-top">
+          <div>
+            <div class="card-brand">Nexura</div>
+            <div class="card-type">Tarjeta de Débito</div>
+          </div>
+          <div class="card-chip"></div>
+        </div>
+        <div class="card-number" id="card-number">•••• •••• •••• ••••</div>
+        <div class="card-bottom">
+          <div class="card-holder">
+            <div class="label">Titular</div>
+            <div class="value" id="card-holder">—</div>
+          </div>
+          <div class="card-expiry">
+            <div class="label">Vence</div>
+            <div class="value" id="card-expiry">••/••</div>
+          </div>
+          <div class="card-network">
+            <div class="ring"></div>
+            <div class="ring overlap"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-actions">
+        <button class="btn btn-secondary" id="toggle-card-btn">Mostrar Número</button>
+        <button class="btn btn-ghost" id="freeze-card-btn">Congelar Tarjeta</button>
+      </div>
+    </div>
+    </div>
+
+    <!-- Content grid -->
+    <div class="stat-grid">
+      <div class="card stat-card reveal d1">
+        <div class="stat-head"><div class="stat-label">Ingresos del Mes</div><div class="stat-icon"></div></div>
+        <div class="stat-value" id="stat-income">—</div>
+        <div class="trend up" id="stat-income-sub"></div>
+      </div>
+      <div class="card stat-card reveal d2">
+        <div class="stat-head"><div class="stat-label">Gastos del Mes</div><div class="stat-icon down"></div></div>
+        <div class="stat-value" id="stat-expense">—</div>
+        <div class="trend down" id="stat-expense-sub"></div>
+      </div>
+      <div class="card stat-card reveal d3">
+        <div class="stat-head"><div class="stat-label">Último Movimiento</div><div class="stat-icon"></div></div>
+        <div class="stat-value" id="stat-last" style="font-size:15px;">—</div>
+        <div class="trend up" id="stat-last-sub"></div>
+      </div>
+      <div class="card stat-card reveal d4">
+        <div class="stat-head"><div class="stat-label">Estado de la Cuenta</div><div class="stat-icon"></div></div>
+        <div class="stat-value" id="stat-account-status" style="font-size:17px;">—</div>
+        <div class="trend up">Nexura Bank</div>
+      </div>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="card card-pad reveal">
+      <div class="section-title"><h2>Accesos Rápidos</h2></div>
+      <div class="quick-actions">
+        <a class="quick-action" href="transfer.html">
+          <div class="qa-icon"></div>
+          <span>Transferir</span>
+        </a>
+        <a class="quick-action" href="cards.html">
+          <div class="qa-icon"></div>
+          <span>Tarjetas</span>
+        </a>
+        <a class="quick-action" href="documents.html">
+          <div class="qa-icon"></div>
+          <span>Documentos</span>
+        </a>
+        <a class="quick-action" href="history.html">
+          <div class="qa-icon"></div>
+          <span>Historial</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Financial Overview -->
+    <div class="card card-pad reveal" style="margin-top:18px;">
+      <div class="section-title"><h2>Financial Overview</h2></div>
+      <div class="overview-grid" style="margin-bottom:20px;">
+        <div>
+          <div class="stat-label">Ingresos Mensuales</div>
+          <div class="stat-value" id="fo-income" style="margin-top:6px;">—</div>
+        </div>
+        <div>
+          <div class="stat-label">Gastos Mensuales</div>
+          <div class="stat-value" id="fo-expense" style="margin-top:6px;">—</div>
+        </div>
+        <div>
+          <div class="stat-label">Ahorro Total</div>
+          <div class="stat-value" id="fo-savings" style="margin-top:6px;">—</div>
+        </div>
+        <div>
+          <div class="stat-label">Tasa de Evolución</div>
+          <div class="stat-value" id="fo-rate" style="margin-top:6px;">—</div>
+        </div>
+      </div>
+      <div class="grid-2" style="margin-top:0;">
+        <div>
+          <div style="font-size:12.5px; color:var(--text-low); margin-bottom:10px;">Saldo — Últimos 12 Meses</div>
+          <div class="chart-wrap"><canvas id="chart-balance"></canvas></div>
+        </div>
+        <div>
+          <div style="font-size:12.5px; color:var(--text-low); margin-bottom:10px;">Ingresos vs Gastos</div>
+          <div class="chart-wrap"><canvas id="chart-income-expense"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-top:18px;">
+      <div class="card card-pad reveal">
+        <div class="section-title">
+          <h2>Actividad Reciente</h2>
+          <a class="link" href="history.html">Ver todo →</a>
+        </div>
+        <div id="recent-txns"></div>
+      </div>
+
+      <div class="card card-pad reveal d1">
+        <div class="section-title"><h2>Seguridad de la Cuenta</h2><a class="link" href="profile.html">Ver todo →</a></div>
+        <div id="security-list"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="js/data-service.js"></script>
+<script src="js/shell.js"></script>
+<script>
+let currentUser = null;
+
+async function main() {
+  currentUser = await Shell.requireClientSession();
+  if (!currentUser) return;
+  await Shell.renderShell("dashboard", currentUser);
+
+  document.getElementById("greeting").textContent = `Bienvenido, ${currentUser.name.split(" ")[0]} 👋`;
+  document.getElementById("today").textContent = `${Shell.fmtDate(new Date().toISOString())} · ${Shell.fmtTime(new Date().toISOString())}`;
+
+  const balParts = Shell.fmtAmountParts(currentUser.balance);
+  document.getElementById("balance-figure").innerHTML = `${balParts.sign}$${balParts.int} <span class="cents">.${balParts.dec}</span>`;
+  document.getElementById("available-value").textContent = Shell.fmtUSD(currentUser.available);
+  document.getElementById("account-status-value").textContent = currentUser.accountStatus || "Activa";
+  document.getElementById("verif-value").textContent = currentUser.verificationLevel || "Pendiente";
+  document.getElementById("account-chip").textContent = Shell.maskAccount(currentUser.accountNumber);
+
+  // Quick action icons
+  const qaIcons = [Shell.ICONS.transfer, Shell.ICONS.card, Shell.ICONS.doc, Shell.ICONS.history];
+  document.querySelectorAll(".qa-icon").forEach((el, i) => { el.innerHTML = qaIcons[i]; });
+
+  // Skeleton loading while data is fetched (simula latencia de red real)
+  document.getElementById("recent-txns").innerHTML = Shell.skeletonRows(4);
+  document.getElementById("security-list").innerHTML = Shell.skeletonRows(4);
+  await Shell.wait(350);
+
+  // Recent transactions
+  const allTxns = await DataService.getTransactions(currentUser.id);
+  const txns = allTxns.slice(0, 6);
+  const txnHost = document.getElementById("recent-txns");
+  if (txns.length === 0) {
+    txnHost.innerHTML = `<div class="empty-state"><h3>No hay actividad reciente.</h3><p>Los movimientos aparecerán aquí cuando la administración los registre.</p></div>`;
+  } else {
+    txnHost.innerHTML = txns.map(t => `
+      <div class="txn-row">
+        <div class="txn-icon">${t.type === "credit" ? "↓" : "↑"}</div>
+        <div class="txn-main">
+          <div class="txn-label">${t.label}</div>
+          <div class="txn-sub">${t.category} · ${Shell.fmtDate(t.date)}</div>
+        </div>
+        <div class="txn-amount ${t.type}">${t.type === "credit" ? "+" : "−"}${Shell.fmtUSD(t.amount)}</div>
+      </div>
+    `).join("");
+  }
+
+  // Month stats
+  const now = new Date();
+  const inMonth = (d) => { const dt = new Date(d); return dt.getMonth() === now.getMonth() && dt.getFullYear() === now.getFullYear(); };
+  const monthTxns = allTxns.filter(t => inMonth(t.date));
+  const income = monthTxns.filter(t => t.type === "credit").reduce((s, t) => s + t.amount, 0);
+  const expense = monthTxns.filter(t => t.type === "debit").reduce((s, t) => s + t.amount, 0);
+  document.querySelectorAll(".stat-icon").forEach((el, i) => { el.innerHTML = i === 1 ? Shell.ICONS.down : Shell.ICONS.up; });
+  document.getElementById("stat-income").textContent = Shell.fmtUSD(income);
+  document.getElementById("stat-income-sub").textContent = `${monthTxns.filter(t => t.type === "credit").length} movimiento(s) este mes`;
+  document.getElementById("stat-expense").textContent = Shell.fmtUSD(expense);
+  document.getElementById("stat-expense-sub").textContent = `${monthTxns.filter(t => t.type === "debit").length} movimiento(s) este mes`;
+
+  if (allTxns.length > 0) {
+    const last = allTxns[0];
+    document.getElementById("stat-last").textContent = last.label;
+    document.getElementById("stat-last-sub").textContent = `${last.type === "credit" ? "+" : "−"}${Shell.fmtUSD(last.amount)} · ${Shell.fmtDate(last.date)}`;
+  } else {
+    document.getElementById("stat-last").textContent = "Sin movimientos";
+    document.getElementById("stat-last-sub").textContent = "No hay actividad reciente.";
+  }
+  document.getElementById("stat-account-status").innerHTML = `<span class="status-pill ${currentUser.accountStatus === "Suspendida" ? "rejected" : "completed"}">${currentUser.accountStatus || "Activa"}</span>`;
+
+  // Security card
+  const secHost = document.getElementById("security-list");
+  const verifOk = (currentUser.verificationLevel || "").toLowerCase() === "verificado";
+  secHost.innerHTML = `
+    <div class="security-row"><div class="k">${Shell.ICONS.shield} Estado de Verificación</div><div class="v"><span class="verif-badge ${verifOk ? "ok" : "pending"}">${currentUser.verificationLevel || "Pendiente"}</span></div></div>
+    <div class="security-row"><div class="k">Nivel de Seguridad</div><div class="v">Alto</div></div>
+    <div class="security-row"><div class="k">Sesión Activa</div><div class="v"><span class="status-pill completed">En línea</span></div></div>
+    <div class="security-row"><div class="k">Último Acceso</div><div class="v">${currentUser.lastAccess ? Shell.fmtDateTime(currentUser.lastAccess) : "Primer acceso"}</div></div>
+    <div class="security-row"><div class="k">Dirección IP</div><div class="v">${currentUser.lastIP || "—"}</div></div>
+  `;
+
+  buildFinancialOverview(allTxns);
+  setupDebitCard(currentUser);
+}
+
+function monthKey(d) {
+  const dt = new Date(d);
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function monthLabel(key) {
+  const [y, m] = key.split("-").map(Number);
+  return new Intl.DateTimeFormat("es-US", { month: "short" }).format(new Date(y, m - 1, 1));
+}
+
+function buildFinancialOverview(allTxns) {
+  // Construir los últimos 12 meses (incluyendo meses sin movimientos)
+  const months = [];
+  const now = new Date();
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push(monthKey(d));
+  }
+
+  const byMonth = {};
+  months.forEach(m => { byMonth[m] = { income: 0, expense: 0 }; });
+  allTxns.forEach(t => {
+    const k = monthKey(t.date);
+    if (byMonth[k]) {
+      if (t.type === "credit") byMonth[k].income += t.amount;
+      else byMonth[k].expense += t.amount;
+    }
+  });
+
+  // Saldo acumulado a lo largo de los 12 meses (partiendo del neto histórico)
+  let running = allTxns
+    .filter(t => new Date(t.date) < new Date(months[0] + "-01"))
+    .reduce((s, t) => s + (t.type === "credit" ? t.amount : -t.amount), 0);
+  const balanceSeries = months.map(m => {
+    running += byMonth[m].income - byMonth[m].expense;
+    return Math.round(running * 100) / 100;
+  });
+
+  const incomeSeries = months.map(m => byMonth[m].income);
+  const expenseSeries = months.map(m => byMonth[m].expense);
+  const labels = months.map(monthLabel);
+
+  const totalSavings = allTxns.reduce((s, t) => s + (t.type === "credit" ? t.amount : -t.amount), 0);
+  const thisMonth = byMonth[months[11]];
+  const prevMonth = byMonth[months[10]];
+  const thisNet = thisMonth.income - thisMonth.expense;
+  const prevNet = prevMonth.income - prevMonth.expense;
+  const rate = prevNet !== 0 ? ((thisNet - prevNet) / Math.abs(prevNet)) * 100 : (thisNet > 0 ? 100 : 0);
+
+  document.getElementById("fo-income").textContent = Shell.fmtUSD(thisMonth.income);
+  document.getElementById("fo-expense").textContent = Shell.fmtUSD(thisMonth.expense);
+  document.getElementById("fo-savings").textContent = Shell.fmtUSD(totalSavings);
+  document.getElementById("fo-rate").innerHTML = `<span style="color:${rate >= 0 ? "var(--emerald)" : "var(--coral)"};">${rate >= 0 ? "+" : ""}${rate.toFixed(1)}%</span>`;
+
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+  const gridColor = isDark ? "rgba(255,255,255,0.06)" : "rgba(20,22,26,0.06)";
+  const textColor = isDark ? "#b8bfc9" : "#565f6a";
+
+  Chart.defaults.font.family = "Inter, sans-serif";
+  Chart.defaults.color = textColor;
+
+  new Chart(document.getElementById("chart-balance"), {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        data: balanceSeries,
+        borderColor: "#c9793c",
+        backgroundColor: "rgba(201,121,60,0.12)",
+        fill: true,
+        tension: 0.35,
+        pointRadius: 0,
+        borderWidth: 2.5,
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false } },
+        y: { grid: { color: gridColor }, ticks: { callback: (v) => "$" + v } },
+      },
+    },
+  });
+
+  new Chart(document.getElementById("chart-income-expense"), {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        { label: "Ingresos", data: incomeSeries, backgroundColor: "#22a06b", borderRadius: 4 },
+        { label: "Gastos", data: expenseSeries, backgroundColor: "#d6483a", borderRadius: 4 },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: "bottom", labels: { boxWidth: 10, padding: 14, font: { size: 11.5 } } } },
+      scales: {
+        x: { grid: { display: false } },
+        y: { grid: { color: gridColor }, ticks: { callback: (v) => "$" + v } },
+      },
+    },
+  });
+}
+
+function cardNumberFromUser(user) {
+  let seed = 0;
+  for (const ch of user.id) seed = (seed * 31 + ch.charCodeAt(0)) >>> 0;
+  const groups = [];
+  for (let i = 0; i < 4; i++) {
+    seed = (seed * 1103515245 + 12345) >>> 0;
+    groups.push(String(1000 + (seed % 9000)));
+  }
+  return groups;
+}
+
+function expiryFromUser(user) {
+  const created = new Date(user.createdAt || Date.now());
+  const exp = new Date(created.getFullYear() + 4, created.getMonth());
+  return `${String(exp.getMonth() + 1).padStart(2, "0")}/${String(exp.getFullYear()).slice(2)}`;
+}
+
+function setupDebitCard(user) {
+  const groups = cardNumberFromUser(user);
+  const masked = `•••• •••• •••• ${groups[3]}`;
+  const full = groups.join(" ");
+  let revealed = false;
+  let frozen = !!user.cardFrozen;
+
+  const numberEl = document.getElementById("card-number");
+  const toggleBtn = document.getElementById("toggle-card-btn");
+  const freezeBtn = document.getElementById("freeze-card-btn");
+  const cardEl = document.querySelector(".debit-card");
+
+  document.getElementById("card-holder").textContent = user.name.toUpperCase();
+  document.getElementById("card-expiry").textContent = expiryFromUser(user);
+  numberEl.textContent = masked;
+
+  const applyFrozen = () => {
+    cardEl.style.filter = frozen ? "grayscale(1) brightness(0.75)" : "none";
+    freezeBtn.textContent = frozen ? "Descongelar Tarjeta" : "Congelar Tarjeta";
+  };
+  applyFrozen();
+
+  toggleBtn.addEventListener("click", () => {
+    revealed = !revealed;
+    numberEl.textContent = revealed ? full : masked;
+    toggleBtn.textContent = revealed ? "Ocultar Número" : "Mostrar Número";
+  });
+
+  freezeBtn.addEventListener("click", async () => {
+    frozen = !frozen;
+    applyFrozen();
+    await DataService.updateUser(user.id, { cardFrozen: frozen });
+    Shell.toast(frozen ? "Tarjeta congelada" : "Tarjeta descongelada");
+  });
+}
+
+main();
+</script>
+<script>
+window.addEventListener("load", () => {
+  setTimeout(() => {
+    const s = document.getElementById("splash-screen");
+    if (s) s.classList.add("hide");
+  }, 650);
+});
+</script>
+</body>
+</html>

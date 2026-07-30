@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSI0IiB5MT0iNiIgeDI9IjQ0IiB5Mj0iNDIiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZjBjMTdlIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2M5NzkzYyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iMTIiIGZpbGw9InVybCgjZykiLz4KICA8cGF0aCBkPSJNMTUgMzRWMTQuNmMwLS45IDEuMDgtMS4zNiAxLjczLS43M0wzMiAyOC43VjE0IiBzdHJva2U9IiMxNDE2MWEiIHN0cm9rZS13aWR0aD0iMy42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGZpbGw9Im5vbmUiLz4KPC9zdmc+Cg==" />
+<script>(function(){try{document.documentElement.setAttribute("data-theme", localStorage.getItem("nexura:theme")||"light");}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nexura — Iniciar Sesión</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="splash-screen" id="splash-screen">
+  <div class="splash-logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none"><defs><linearGradient id="nexuraGrad" x1="4" y1="6" x2="44" y2="42" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#f0c17e"/><stop offset="1" stop-color="#c9793c"/></linearGradient></defs><rect x="1" y="1" width="46" height="46" rx="13" fill="url(#nexuraGrad)"/><path d="M15 34V14.6c0-.9 1.08-1.36 1.73-.73L32 28.7V14" stroke="#14161a" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div>
+  <div class="splash-brand">NEXURA</div>
+  <div class="splash-bar"><span></span></div>
+</div>
+
+<div class="auth-shell">
+  <div class="auth-visual">
+    <div class="brand">
+      <div class="brand-mark"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none"><defs><linearGradient id="nexuraGrad" x1="4" y1="6" x2="44" y2="42" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#f0c17e"/><stop offset="1" stop-color="#c9793c"/></linearGradient></defs><rect x="1" y="1" width="46" height="46" rx="13" fill="url(#nexuraGrad)"/><path d="M15 34V14.6c0-.9 1.08-1.36 1.73-.73L32 28.7V14" stroke="#14161a" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div>
+      <div>
+        <div class="brand-name">Nexura</div>
+        <div class="brand-tag">Banking</div>
+      </div>
+    </div>
+
+    <div class="auth-quote">
+      Claridad financiera, <span class="accent">sin fricción.</span><br />
+      Una sola vista de sus cuentas, transferencias y movimientos.
+    </div>
+
+    <div class="sandbox-pill" style="width: fit-content;"><span class="dot"></span> Entorno de Prueba — sin datos bancarios reales</div>
+  </div>
+
+  <div class="auth-form-side">
+    <div class="auth-form">
+      <div class="tab-switch">
+        <button class="active" id="tab-client">Portal del Cliente</button>
+        <button id="tab-admin">Portal Administrador</button>
+      </div>
+
+      <!-- CLIENT AREA -->
+      <div id="panel-client">
+
+        <div class="tab-switch" style="margin-bottom: 20px;">
+          <button class="active" id="tab-login">Iniciar Sesión</button>
+          <button id="tab-register">Crear Cuenta</button>
+        </div>
+
+        <!-- LOGIN -->
+        <div id="panel-login">
+          <h2 style="margin-bottom: 6px;">Bienvenido de nuevo</h2>
+          <p style="color: var(--text-low); font-size: 13px; margin-bottom: 24px;">Ingrese con su correo y contraseña.</p>
+
+          <div class="field">
+            <label for="login-email">Correo Electrónico</label>
+            <input type="email" id="login-email" placeholder="usted@correo.com" />
+          </div>
+          <div class="field">
+            <label for="login-pass">Contraseña</label>
+            <input type="password" id="login-pass" placeholder="••••••••" />
+          </div>
+          <button class="btn btn-primary btn-block" id="client-login-btn">Ingresar</button>
+        </div>
+
+        <!-- REGISTER -->
+        <div id="panel-register" style="display:none;">
+          <h2 style="margin-bottom: 6px;">Crear una cuenta</h2>
+          <p style="color: var(--text-low); font-size: 13px; margin-bottom: 24px;">Regístrese para explorar el portal con una cuenta nueva, sin historial.</p>
+
+          <div class="field">
+            <label for="reg-name">Nombre Completo</label>
+            <input type="text" id="reg-name" placeholder="Ej. Sofía Ramírez" />
+          </div>
+          <div class="field">
+            <label for="reg-email">Correo Electrónico</label>
+            <input type="email" id="reg-email" placeholder="usted@correo.com" />
+          </div>
+          <div class="field">
+            <label for="reg-pass">Contraseña</label>
+            <input type="password" id="reg-pass" placeholder="Mínimo 8 caracteres" />
+          </div>
+          <button class="btn btn-primary btn-block" id="register-btn">Crear Cuenta y Continuar</button>
+          <span class="hint" style="display:block; margin-top:10px;">Su cuenta se creará sin saldo ni historial — la administración podrá activarla.</span>
+        </div>
+      </div>
+
+      <!-- ADMIN LOGIN -->
+      <div id="panel-admin" style="display:none;">
+        <h2 style="margin-bottom: 6px;">Acceso Administrador</h2>
+        <p style="color: var(--text-low); font-size: 13px; margin-bottom: 24px;">Portal de gestión — cuentas, transferencias, notificaciones, documentos.</p>
+
+        <div class="field">
+          <label for="admin-email">Usuario</label>
+          <input type="email" id="admin-email" placeholder="admin@nexura.app" value="admin@nexura.app" />
+        </div>
+        <div class="field">
+          <label for="admin-pass">Contraseña</label>
+          <input type="password" id="admin-pass" placeholder="••••••••••" />
+          <span class="hint">Acceso restringido a la administración.</span>
+        </div>
+        <button class="btn btn-primary btn-block" id="admin-login-btn">Entrar a la Administración</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/data-service.js"></script>
+<script src="js/shell.js"></script>
+<script>
+async function boot() {
+  document.getElementById("tab-client").addEventListener("click", () => switchMainTab("client"));
+  document.getElementById("tab-admin").addEventListener("click", () => switchMainTab("admin"));
+  document.getElementById("tab-login").addEventListener("click", () => switchClientTab("login"));
+  document.getElementById("tab-register").addEventListener("click", () => switchClientTab("register"));
+
+  document.getElementById("client-login-btn").addEventListener("click", handleLogin);
+  document.getElementById("register-btn").addEventListener("click", handleRegister);
+  document.getElementById("admin-login-btn").addEventListener("click", handleAdminLogin);
+
+  document.getElementById("login-pass").addEventListener("keydown", (e) => { if (e.key === "Enter") handleLogin(); });
+  document.getElementById("reg-pass").addEventListener("keydown", (e) => { if (e.key === "Enter") handleRegister(); });
+  document.getElementById("admin-pass").addEventListener("keydown", (e) => { if (e.key === "Enter") handleAdminLogin(); });
+}
+
+async function handleLogin() {
+  const btn = document.getElementById("client-login-btn");
+  const email = document.getElementById("login-email").value.trim();
+  const password = document.getElementById("login-pass").value;
+  if (!email || !password) { Shell.toast("Complete correo y contraseña", "error"); return; }
+
+  btn.disabled = true;
+  btn.textContent = "Ingresando…";
+  try {
+    await DataService.login(email, password);
+    window.location.href = "dashboard.html";
+  } catch (err) {
+    Shell.toast(err.message || "Correo o contraseña incorrectos", "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Ingresar";
+  }
+}
+
+async function handleRegister() {
+  const btn = document.getElementById("register-btn");
+  const name = document.getElementById("reg-name").value.trim();
+  const email = document.getElementById("reg-email").value.trim();
+  const password = document.getElementById("reg-pass").value;
+
+  if (!name || !email || !password) { Shell.toast("Complete todos los campos", "error"); return; }
+  if (!/^\S+@\S+\.\S+$/.test(email)) { Shell.toast("Ingrese un correo electrónico válido", "error"); return; }
+  if (password.length < 8) { Shell.toast("La contraseña debe tener al menos 8 caracteres", "error"); return; }
+
+  const parts = name.split(" ");
+  const firstName = parts[0];
+  const lastName = parts.slice(1).join(" ") || parts[0];
+
+  btn.disabled = true;
+  btn.textContent = "Creando cuenta…";
+  try {
+    await DataService.register({ firstName, lastName, email, password });
+    Shell.toast("Cuenta creada correctamente");
+    window.location.href = "dashboard.html";
+  } catch (err) {
+    Shell.toast(err.message || "No se pudo crear la cuenta", "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Crear Cuenta y Continuar";
+  }
+}
+
+async function handleAdminLogin() {
+  const btn = document.getElementById("admin-login-btn");
+  const email = document.getElementById("admin-email").value.trim();
+  const password = document.getElementById("admin-pass").value;
+  if (!email || !password) { Shell.toast("Complete usuario y contraseña", "error"); return; }
+
+  btn.disabled = true;
+  btn.textContent = "Ingresando…";
+  try {
+    await DataService.adminLogin(email, password);
+    window.location.href = "admin/dashboard.html";
+  } catch (err) {
+    Shell.toast(err.message || "Credenciales incorrectas", "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Entrar a la Administración";
+  }
+}
+
+function switchMainTab(which) {
+  document.getElementById("tab-client").classList.toggle("active", which === "client");
+  document.getElementById("tab-admin").classList.toggle("active", which === "admin");
+  document.getElementById("panel-client").style.display = which === "client" ? "block" : "none";
+  document.getElementById("panel-admin").style.display = which === "admin" ? "block" : "none";
+}
+
+function switchClientTab(which) {
+  document.getElementById("tab-login").classList.toggle("active", which === "login");
+  document.getElementById("tab-register").classList.toggle("active", which === "register");
+  document.getElementById("panel-login").style.display = which === "login" ? "block" : "none";
+  document.getElementById("panel-register").style.display = which === "register" ? "block" : "none";
+}
+
+boot();
+</script>
+<script>
+window.addEventListener("load", () => {
+  setTimeout(() => {
+    const s = document.getElementById("splash-screen");
+    if (s) s.classList.add("hide");
+  }, 650);
+});
+</script>
+</body>
+</html>

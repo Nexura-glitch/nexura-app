@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<script>(function(){try{document.documentElement.setAttribute("data-theme", localStorage.getItem("nexura:theme")||"light");}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nexura — Documentos</title>
+<link rel="stylesheet" href="css/style.css" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSI0IiB5MT0iNiIgeDI9IjQ0IiB5Mj0iNDIiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZjBjMTdlIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2M5NzkzYyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iMTIiIGZpbGw9InVybCgjZykiLz4KICA8cGF0aCBkPSJNMTUgMzRWMTQuNmMwLS45IDEuMDgtMS4zNiAxLjczLS43M0wzMiAyOC43VjE0IiBzdHJva2U9IiMxNDE2MWEiIHN0cm9rZS13aWR0aD0iMy42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGZpbGw9Im5vbmUiLz4KPC9zdmc+Cg==" />
+</head>
+<body>
+
+<div class="app-shell">
+  <nav class="sidebar" id="shell-sidebar"></nav>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1>Documentos</h1>
+        <div class="subtitle">Contratos, comprobantes, recibos y formularios de su cuenta.</div>
+      </div>
+      <div class="topbar-actions" id="shell-topbar-right"></div>
+    </div>
+
+    <div class="card card-pad reveal">
+      <div class="toolbar">
+        <select class="select-filter" id="cat-filter">
+          <option value="all">Todas las categorías</option>
+          <option value="Contratos">Contratos</option>
+          <option value="Comprobantes">Comprobantes</option>
+          <option value="Recibos">Recibos</option>
+          <option value="Formularios">Formularios</option>
+        </select>
+      </div>
+      <div class="doc-grid" id="doc-grid"></div>
+      <div id="empty-host"></div>
+    </div>
+  </main>
+</div>
+
+<script src="js/data-service.js"></script>
+<script src="js/shell.js"></script>
+<script>
+let currentUser = null;
+let docs = [];
+
+async function main() {
+  currentUser = await Shell.requireClientSession();
+  if (!currentUser) return;
+  await Shell.renderShell("documents", currentUser);
+
+  docs = await DataService.getDocuments(currentUser.id);
+  document.getElementById("cat-filter").addEventListener("change", render);
+  render();
+}
+
+function render() {
+  const cat = document.getElementById("cat-filter").value;
+  const rows = cat === "all" ? docs : docs.filter(d => d.category === cat);
+  const grid = document.getElementById("doc-grid");
+  const emptyHost = document.getElementById("empty-host");
+
+  if (rows.length === 0) {
+    grid.innerHTML = "";
+    emptyHost.innerHTML = `<div class="empty-state"><h3>No hay documentos disponibles.</h3><p>Los documentos aparecerán aquí cuando la administración los publique.</p></div>`;
+    return;
+  }
+  emptyHost.innerHTML = "";
+
+  grid.innerHTML = rows.map(d => `
+    <div class="card doc-card">
+      <div class="doc-icon">${Shell.ICONS.doc}</div>
+      <span class="doc-cat-tag">${d.category}</span>
+      <div class="doc-title">${d.title}</div>
+      <div class="doc-meta">${Shell.fmtDate(d.date)}</div>
+      <button class="btn btn-secondary btn-block" data-id="${d.id}" style="margin-top:4px;">Descargar</button>
+    </div>
+  `).join("");
+
+  grid.querySelectorAll("button[data-id]").forEach(btn => {
+    btn.addEventListener("click", () => downloadDoc(btn.dataset.id));
+  });
+}
+
+function downloadDoc(id) {
+  const doc = docs.find(d => d.id === id);
+  if (!doc) return;
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${doc.title}</title>
+  <style>body{font-family:Arial,sans-serif;background:#fbf9f4;color:#1c1c1c;padding:40px;} h1{font-size:20px;} .meta{color:#857c6c;font-size:12px;margin-bottom:24px;} .box{border:1px dashed #cfc8ba;border-radius:12px;padding:24px;white-space:pre-wrap;line-height:1.6;}</style>
+  </head><body>
+  <h1>${doc.title}</h1>
+  <div class="meta">${doc.category} · ${Shell.fmtDate(doc.date)} · Nexura Sandbox</div>
+  <div class="box">${(doc.content || "Documento de demostración generado por el portal administrador de Nexura.").replace(/\n/g, "<br>")}</div>
+  </body></html>`;
+  const blob = new Blob([html], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${doc.title.replace(/\s+/g, "-").toLowerCase()}.html`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+main();
+</script>
+</body>
+</html>

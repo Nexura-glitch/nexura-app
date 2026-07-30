@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<script>(function(){try{document.documentElement.setAttribute("data-theme", localStorage.getItem("nexura:theme")||"light");}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nexura — Tarjetas</title>
+<link rel="stylesheet" href="css/style.css" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSI0IiB5MT0iNiIgeDI9IjQ0IiB5Mj0iNDIiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZjBjMTdlIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2M5NzkzYyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iMTIiIGZpbGw9InVybCgjZykiLz4KICA8cGF0aCBkPSJNMTUgMzRWMTQuNmMwLS45IDEuMDgtMS4zNiAxLjczLS43M0wzMiAyOC43VjE0IiBzdHJva2U9IiMxNDE2MWEiIHN0cm9rZS13aWR0aD0iMy42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGZpbGw9Im5vbmUiLz4KPC9zdmc+Cg==" />
+</head>
+<body>
+
+<div class="app-shell">
+  <nav class="sidebar" id="shell-sidebar"></nav>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1>Tarjetas</h1>
+        <div class="subtitle">Administre su tarjeta de débito y su tarjeta virtual.</div>
+      </div>
+      <div class="topbar-actions" id="shell-topbar-right"></div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:22px;">
+
+      <!-- DEBIT CARD -->
+      <div class="card card-pad reveal">
+        <div class="section-title"><h2>Tarjeta de Débito</h2></div>
+        <div class="tarjeta-panel">
+          <div>
+            <div class="debit-card" id="debit-card-el">
+              <div class="card-top">
+                <div>
+                  <div class="card-brand">Nexura</div>
+                  <div class="card-type">Tarjeta de Débito</div>
+                </div>
+                <div class="card-chip"></div>
+              </div>
+              <div class="card-number" id="debit-number">•••• •••• •••• ••••</div>
+              <div class="card-bottom">
+                <div class="card-holder">
+                  <div class="label">Titular</div>
+                  <div class="value" id="debit-holder">—</div>
+                </div>
+                <div class="card-expiry">
+                  <div class="label">Vence</div>
+                  <div class="value" id="debit-expiry">••/••</div>
+                </div>
+                <div class="card-network">
+                  <div class="ring"></div>
+                  <div class="ring overlap"></div>
+                </div>
+              </div>
+            </div>
+            <div class="card-actions">
+              <button class="btn btn-secondary" id="debit-toggle-number-btn">Ver Detalles</button>
+            </div>
+          </div>
+
+          <div class="tarjeta-actions-list">
+            <div class="tarjeta-row">
+              <div><div class="lbl">Tarjeta Activa</div><div class="sub">Habilita o deshabilita el uso de la tarjeta</div></div>
+              <div class="toggle-switch" id="debit-active-toggle"></div>
+            </div>
+            <div class="tarjeta-row">
+              <div><div class="lbl">Congelar Tarjeta</div><div class="sub">Bloquea temporalmente todas las operaciones</div></div>
+              <div class="toggle-switch" id="debit-freeze-toggle"></div>
+            </div>
+            <div class="tarjeta-row">
+              <div>
+                <div class="lbl">Límite de Gasto Mensual</div>
+                <div class="sub">Monto máximo autorizado por mes</div>
+              </div>
+              <div class="limit-input-row">
+                <input type="number" step="10" id="debit-limit-input" />
+                <button class="btn btn-ghost" id="debit-limit-save" style="padding:8px 12px; font-size:12.5px;">Guardar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIRTUAL CARD -->
+      <div class="card card-pad reveal d1">
+        <div class="section-title"><h2>Tarjeta Virtual</h2></div>
+        <div class="tarjeta-panel">
+          <div>
+            <div class="debit-card" id="virtual-card-el" style="background: radial-gradient(420px 220px at 100% 0%, rgba(34,160,107,0.25), transparent 60%), linear-gradient(150deg, #123324 0%, #04120a 75%); border-color: rgba(34,160,107,0.3);">
+              <div class="card-top">
+                <div>
+                  <div class="card-brand">Nexura</div>
+                  <div class="card-type" style="color:#7fe3b4;">Tarjeta Virtual</div>
+                </div>
+                <div class="card-chip"></div>
+              </div>
+              <div class="card-number" id="virtual-number">•••• •••• •••• ••••</div>
+              <div class="card-bottom">
+                <div class="card-holder">
+                  <div class="label">Titular</div>
+                  <div class="value" id="virtual-holder">—</div>
+                </div>
+                <div class="card-expiry">
+                  <div class="label">Vence</div>
+                  <div class="value" id="virtual-expiry">••/••</div>
+                </div>
+                <div class="card-network">
+                  <div class="ring" style="background:#22a06b;"></div>
+                  <div class="ring overlap"></div>
+                </div>
+              </div>
+            </div>
+            <div class="card-actions">
+              <button class="btn btn-secondary" id="virtual-toggle-number-btn">Ver Detalles</button>
+            </div>
+          </div>
+
+          <div class="tarjeta-actions-list">
+            <div class="tarjeta-row">
+              <div><div class="lbl">Tarjeta Activa</div><div class="sub">Actívela para usarla en compras en línea</div></div>
+              <div class="toggle-switch" id="virtual-active-toggle"></div>
+            </div>
+            <div class="tarjeta-row">
+              <div><div class="lbl">Congelar Tarjeta</div><div class="sub">Bloquea temporalmente todas las operaciones</div></div>
+              <div class="toggle-switch" id="virtual-freeze-toggle"></div>
+            </div>
+            <div class="tarjeta-row">
+              <div>
+                <div class="lbl">Límite de Gasto Mensual</div>
+                <div class="sub">Monto máximo autorizado por mes</div>
+              </div>
+              <div class="limit-input-row">
+                <input type="number" step="10" id="virtual-limit-input" />
+                <button class="btn btn-ghost" id="virtual-limit-save" style="padding:8px 12px; font-size:12.5px;">Guardar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="js/data-service.js"></script>
+<script src="js/shell.js"></script>
+<script>
+let currentUser = null;
+
+function cardNumberFrom(seedStr) {
+  let seed = 0;
+  for (const ch of seedStr) seed = (seed * 31 + ch.charCodeAt(0)) >>> 0;
+  const groups = [];
+  for (let i = 0; i < 4; i++) {
+    seed = (seed * 1103515245 + 12345) >>> 0;
+    groups.push(String(1000 + (seed % 9000)));
+  }
+  return groups;
+}
+
+function expiryFrom(dateStr) {
+  const created = new Date(dateStr || Date.now());
+  const exp = new Date(created.getFullYear() + 4, created.getMonth());
+  return `${String(exp.getMonth() + 1).padStart(2, "0")}/${String(exp.getFullYear()).slice(2)}`;
+}
+
+function setupCard(prefix, seedSuffix, user) {
+  const groups = cardNumberFrom(user.id + seedSuffix);
+  const masked = `•••• •••• •••• ${groups[3]}`;
+  const full = groups.join(" ");
+  let revealed = false;
+
+  document.getElementById(`${prefix}-holder`).textContent = user.name.toUpperCase();
+  document.getElementById(`${prefix}-expiry`).textContent = expiryFrom(user.createdAt);
+  document.getElementById(`${prefix}-number`).textContent = masked;
+
+  document.getElementById(`${prefix}-toggle-number-btn`).addEventListener("click", () => {
+    revealed = !revealed;
+    document.getElementById(`${prefix}-number`).textContent = revealed ? full : masked;
+    document.getElementById(`${prefix}-toggle-number-btn`).textContent = revealed ? "Ocultar Detalles" : "Ver Detalles";
+  });
+}
+
+function applyCardVisual(prefix, active, frozen) {
+  const el = document.getElementById(`${prefix}-card-el`);
+  if (!active) { el.style.filter = "grayscale(1) brightness(0.55)"; }
+  else if (frozen) { el.style.filter = "grayscale(1) brightness(0.75)"; }
+  else { el.style.filter = "none"; }
+}
+
+async function main() {
+  currentUser = await Shell.requireClientSession();
+  if (!currentUser) return;
+  await Shell.renderShell("cards", currentUser);
+
+  setupCard("debit", "debit", currentUser);
+  setupCard("virtual", "virtual", currentUser);
+
+  wireToggle("debit-active-toggle", currentUser.debitCardActive, async (val) => {
+    currentUser = await DataService.updateUser(currentUser.id, { debitCardActive: val });
+    applyCardVisual("debit", currentUser.debitCardActive, currentUser.debitCardFrozen);
+    Shell.toast(val ? "Tarjeta de débito activada" : "Tarjeta de débito desactivada");
+  });
+  wireToggle("debit-freeze-toggle", currentUser.debitCardFrozen, async (val) => {
+    currentUser = await DataService.updateUser(currentUser.id, { debitCardFrozen: val });
+    applyCardVisual("debit", currentUser.debitCardActive, currentUser.debitCardFrozen);
+    Shell.toast(val ? "Tarjeta de débito congelada" : "Tarjeta de débito descongelada");
+  });
+  wireToggle("virtual-active-toggle", currentUser.virtualCardActive, async (val) => {
+    currentUser = await DataService.updateUser(currentUser.id, { virtualCardActive: val });
+    applyCardVisual("virtual", currentUser.virtualCardActive, currentUser.virtualCardFrozen);
+    Shell.toast(val ? "Tarjeta virtual activada" : "Tarjeta virtual desactivada");
+  });
+  wireToggle("virtual-freeze-toggle", currentUser.virtualCardFrozen, async (val) => {
+    currentUser = await DataService.updateUser(currentUser.id, { virtualCardFrozen: val });
+    applyCardVisual("virtual", currentUser.virtualCardActive, currentUser.virtualCardFrozen);
+    Shell.toast(val ? "Tarjeta virtual congelada" : "Tarjeta virtual descongelada");
+  });
+
+  applyCardVisual("debit", currentUser.debitCardActive, currentUser.debitCardFrozen);
+  applyCardVisual("virtual", currentUser.virtualCardActive, currentUser.virtualCardFrozen);
+
+  document.getElementById("debit-limit-input").value = currentUser.debitLimit || 0;
+  document.getElementById("virtual-limit-input").value = currentUser.virtualLimit || 0;
+
+  document.getElementById("debit-limit-save").addEventListener("click", async () => {
+    const val = parseFloat(document.getElementById("debit-limit-input").value) || 0;
+    currentUser = await DataService.updateUser(currentUser.id, { debitLimit: val });
+    Shell.toast("Límite actualizado");
+  });
+  document.getElementById("virtual-limit-save").addEventListener("click", async () => {
+    const val = parseFloat(document.getElementById("virtual-limit-input").value) || 0;
+    currentUser = await DataService.updateUser(currentUser.id, { virtualLimit: val });
+    Shell.toast("Límite actualizado");
+  });
+}
+
+function wireToggle(id, initialOn, onChange) {
+  const el = document.getElementById(id);
+  let state = !!initialOn;
+  el.classList.toggle("on", state);
+  el.addEventListener("click", () => {
+    state = !state;
+    el.classList.toggle("on", state);
+    onChange(state);
+  });
+}
+
+main();
+</script>
+</body>
+</html>

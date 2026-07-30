@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<script>(function(){try{document.documentElement.setAttribute("data-theme", localStorage.getItem("nexura:theme")||"light");}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nexura — Notificaciones</title>
+<link rel="stylesheet" href="css/style.css" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSI0IiB5MT0iNiIgeDI9IjQ0IiB5Mj0iNDIiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZjBjMTdlIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2M5NzkzYyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iMTIiIGZpbGw9InVybCgjZykiLz4KICA8cGF0aCBkPSJNMTUgMzRWMTQuNmMwLS45IDEuMDgtMS4zNiAxLjczLS43M0wzMiAyOC43VjE0IiBzdHJva2U9IiMxNDE2MWEiIHN0cm9rZS13aWR0aD0iMy42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGZpbGw9Im5vbmUiLz4KPC9zdmc+Cg==" />
+</head>
+<body>
+
+<div class="app-shell">
+  <nav class="sidebar" id="shell-sidebar"></nav>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1>Notificaciones</h1>
+        <div class="subtitle">Manténgase al tanto de la actividad de su cuenta.</div>
+      </div>
+      <div class="topbar-actions" id="shell-topbar-right"></div>
+    </div>
+
+    <div class="card card-pad reveal">
+      <div class="toolbar">
+        <select class="select-filter" id="type-filter">
+          <option value="all">Todos los tipos</option>
+          <option value="transaction">Movimientos</option>
+          <option value="transfer">Transferencias</option>
+          <option value="validation">Validaciones</option>
+          <option value="refusal">Cancelaciones</option>
+          <option value="account">Cuenta</option>
+          <option value="security">Seguridad</option>
+        </select>
+        <div style="flex:1;"></div>
+        <button class="btn btn-ghost" id="mark-all-btn">Marcar todo como leído</button>
+      </div>
+
+      <div id="notif-list"></div>
+    </div>
+  </main>
+</div>
+
+<script src="js/data-service.js"></script>
+<script src="js/shell.js"></script>
+<script>
+let currentUser = null;
+let all = [];
+
+const TYPE_LABEL = {
+  transaction: "Movimiento", transfer: "Transferencia", validation: "Validación",
+  refusal: "Cancelación", account: "Cuenta", security: "Seguridad",
+};
+
+async function main() {
+  currentUser = await Shell.requireClientSession();
+  if (!currentUser) return;
+  await Shell.renderShell("notifications", currentUser);
+
+  document.getElementById("notif-list").innerHTML = Shell.skeletonRows(5);
+  await Shell.wait(300);
+  all = await DataService.getNotifications(currentUser.id);
+
+  document.getElementById("type-filter").addEventListener("change", render);
+  document.getElementById("mark-all-btn").addEventListener("click", async () => {
+    await DataService.markAllRead(currentUser.id);
+    all = await DataService.getNotifications(currentUser.id);
+    render();
+    Shell.toast("Notificaciones marcadas como leídas");
+  });
+
+  render();
+}
+
+function render() {
+  const type = document.getElementById("type-filter").value;
+  const rows = type === "all" ? all : all.filter(n => n.type === type);
+  const host = document.getElementById("notif-list");
+
+  if (rows.length === 0) {
+    host.innerHTML = `<div class="empty-state"><h3>No hay actividad reciente.</h3><p>Aquí se le avisará de cualquier novedad en su cuenta.</p></div>`;
+    return;
+  }
+
+  host.innerHTML = rows.map(n => `
+    <div class="notif-item ${n.read ? "" : "unread"}" data-id="${n.id}">
+      <div class="notif-icon">${Shell.ICONS.bell}</div>
+      <div style="flex:1;">
+        <div style="display:flex; justify-content:space-between; gap:10px;">
+          <div class="notif-title">${n.title}</div>
+          <span class="status-pill ${n.type === "refusal" ? "rejected" : n.type === "validation" ? "completed" : "pending"}" style="flex-shrink:0;">${TYPE_LABEL[n.type] || n.type}</span>
+        </div>
+        <div class="notif-msg">${n.message}</div>
+        <div class="notif-time">${Shell.timeAgo(n.date)}</div>
+      </div>
+    </div>
+  `).join("");
+
+  host.querySelectorAll(".notif-item").forEach(el => {
+    el.addEventListener("click", async () => {
+      await DataService.markNotificationRead(el.dataset.id);
+      all = await DataService.getNotifications(currentUser.id);
+      render();
+    });
+  });
+}
+
+main();
+</script>
+</body>
+</html>
