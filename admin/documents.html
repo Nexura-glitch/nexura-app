@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<script>(function(){try{document.documentElement.setAttribute("data-theme", localStorage.getItem("nexura:theme")||"light");}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nexura Admin — Documentos</title>
+<link rel="stylesheet" href="../css/style.css" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSI0IiB5MT0iNiIgeDI9IjQ0IiB5Mj0iNDIiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZjBjMTdlIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2M5NzkzYyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iMTIiIGZpbGw9InVybCgjZykiLz4KICA8cGF0aCBkPSJNMTUgMzRWMTQuNmMwLS45IDEuMDgtMS4zNiAxLjczLS43M0wzMiAyOC43VjE0IiBzdHJva2U9IiMxNDE2MWEiIHN0cm9rZS13aWR0aD0iMy42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGZpbGw9Im5vbmUiLz4KPC9zdmc+Cg==" />
+</head>
+<body>
+
+<div class="app-shell">
+  <nav class="sidebar" id="shell-sidebar"></nav>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1>Documentos</h1>
+        <div class="subtitle">Publique contratos, comprobantes, recibos y formularios para cada cliente.</div>
+      </div>
+      <div class="topbar-actions" id="shell-topbar-right"></div>
+    </div>
+
+    <div class="card card-pad reveal">
+      <div class="toolbar">
+        <select class="select-filter" id="user-filter">
+          <option value="all">Todos los clientes</option>
+        </select>
+        <select class="select-filter" id="cat-filter">
+          <option value="all">Todas las categorías</option>
+          <option value="Contratos">Contratos</option>
+          <option value="Comprobantes">Comprobantes</option>
+          <option value="Recibos">Recibos</option>
+          <option value="Formularios">Formularios</option>
+        </select>
+        <div style="flex:1;"></div>
+        <button class="btn btn-primary" id="new-doc-btn">+ Agregar Documento</button>
+      </div>
+
+      <div class="doc-grid" id="doc-grid"></div>
+      <div id="empty-host"></div>
+    </div>
+  </main>
+</div>
+
+<!-- New document modal -->
+<div class="modal-backdrop" id="new-backdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Agregar Documento</h3>
+      <button class="modal-close" id="close-new">&times;</button>
+    </div>
+    <div class="field">
+      <label>Cliente</label>
+      <select id="d-user"></select>
+    </div>
+    <div class="field">
+      <label>Categoría</label>
+      <select id="d-category">
+        <option value="Contratos">Contratos</option>
+        <option value="Comprobantes">Comprobantes</option>
+        <option value="Recibos">Recibos</option>
+        <option value="Formularios">Formularios</option>
+      </select>
+    </div>
+    <div class="field"><label>Título</label><input type="text" id="d-title" placeholder="Ej. Contrato de apertura de cuenta" /></div>
+    <div class="field"><label>Contenido</label><textarea id="d-content" rows="4" placeholder="Contenido del documento (texto de demostración)"></textarea></div>
+    <button class="btn btn-primary btn-block" id="create-doc-btn">Publicar Documento</button>
+  </div>
+</div>
+
+<script src="../js/data-service.js"></script>
+<script src="../js/shell.js"></script>
+<script>
+let docs = [];
+let users = [];
+
+async function main() {
+  const ok = await Shell.requireAdminSession();
+  if (!ok) return;
+  await AdminShell.renderAdminShell("documents");
+
+  [docs, users] = await Promise.all([DataService.getDocuments(), DataService.getUsers()]);
+
+  const options = users.map(u => `<option value="${u.id}">${u.name}</option>`).join("");
+  document.getElementById("user-filter").innerHTML += options;
+  document.getElementById("d-user").innerHTML = options;
+
+  render();
+
+  document.getElementById("user-filter").addEventListener("change", render);
+  document.getElementById("cat-filter").addEventListener("change", render);
+  document.getElementById("new-doc-btn").addEventListener("click", () => toggleModal(true));
+  document.getElementById("close-new").addEventListener("click", () => toggleModal(false));
+  document.getElementById("new-backdrop").addEventListener("click", (e) => { if (e.target.id === "new-backdrop") toggleModal(false); });
+  document.getElementById("create-doc-btn").addEventListener("click", createDoc);
+}
+
+function toggleModal(open) {
+  document.getElementById("new-backdrop").classList.toggle("open", open);
+}
+
+function userName(id) {
+  const u = users.find(x => x.id === id);
+  return u ? u.name : "—";
+}
+
+function render() {
+  const userFilter = document.getElementById("user-filter").value;
+  const catFilter = document.getElementById("cat-filter").value;
+
+  const rows = docs.filter(d => {
+    if (userFilter !== "all" && d.userId !== userFilter) return false;
+    if (catFilter !== "all" && d.category !== catFilter) return false;
+    return true;
+  });
+
+  const grid = document.getElementById("doc-grid");
+  const emptyHost = document.getElementById("empty-host");
+
+  if (rows.length === 0) {
+    grid.innerHTML = "";
+    emptyHost.innerHTML = `<div class="empty-state"><h3>No hay documentos.</h3><p>Agregue un documento para un cliente.</p></div>`;
+    return;
+  }
+  emptyHost.innerHTML = "";
+
+  grid.innerHTML = rows.map(d => `
+    <div class="card doc-card">
+      <div class="doc-icon">${Shell.ICONS.doc}</div>
+      <span class="doc-cat-tag">${d.category}</span>
+      <div class="doc-title">${d.title}</div>
+      <div class="doc-meta">${userName(d.userId)} · ${Shell.fmtDate(d.date)}</div>
+      <button class="btn btn-danger btn-block" data-id="${d.id}">Eliminar</button>
+    </div>
+  `).join("");
+
+  grid.querySelectorAll("button[data-id]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      await DataService.deleteDocument(btn.dataset.id);
+      docs = await DataService.getDocuments();
+      render();
+      Shell.toast("Documento eliminado");
+    });
+  });
+}
+
+async function createDoc() {
+  const userId = document.getElementById("d-user").value;
+  const category = document.getElementById("d-category").value;
+  const title = document.getElementById("d-title").value.trim();
+  const content = document.getElementById("d-content").value.trim();
+  if (!userId || !title) { Shell.toast("Cliente y título son obligatorios", "error"); return; }
+
+  await DataService.addDocument({ userId, category, title, content });
+  docs = await DataService.getDocuments();
+  render();
+  toggleModal(false);
+  ["d-title", "d-content"].forEach(id => document.getElementById(id).value = "");
+  Shell.toast("Documento publicado");
+}
+
+main();
+</script>
+</body>
+</html>

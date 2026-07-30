@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<script>(function(){try{document.documentElement.setAttribute("data-theme", localStorage.getItem("nexura:theme")||"light");}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nexura Admin — Notificaciones</title>
+<link rel="stylesheet" href="../css/style.css" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSI0IiB5MT0iNiIgeDI9IjQ0IiB5Mj0iNDIiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZjBjMTdlIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2M5NzkzYyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iMTIiIGZpbGw9InVybCgjZykiLz4KICA8cGF0aCBkPSJNMTUgMzRWMTQuNmMwLS45IDEuMDgtMS4zNiAxLjczLS43M0wzMiAyOC43VjE0IiBzdHJva2U9IiMxNDE2MWEiIHN0cm9rZS13aWR0aD0iMy42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGZpbGw9Im5vbmUiLz4KPC9zdmc+Cg==" />
+</head>
+<body>
+
+<div class="app-shell">
+  <nav class="sidebar" id="shell-sidebar"></nav>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1>Notificaciones</h1>
+        <div class="subtitle">Cree y administre las notificaciones enviadas a los clientes.</div>
+      </div>
+      <div class="topbar-actions" id="shell-topbar-right"></div>
+    </div>
+
+    <div class="card card-pad reveal">
+      <div class="toolbar">
+        <select class="select-filter" id="user-filter">
+          <option value="all">Todos los clientes</option>
+        </select>
+        <div style="flex:1;"></div>
+        <button class="btn btn-primary" id="new-notif-btn">+ Crear Notificación</button>
+      </div>
+
+      <div id="notif-list"></div>
+    </div>
+  </main>
+</div>
+
+<!-- New/Edit notification modal -->
+<div class="modal-backdrop" id="new-backdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modal-title">Nueva Notificación</h3>
+      <button class="modal-close" id="close-new">&times;</button>
+    </div>
+    <div class="field">
+      <label>Cliente Destinatario</label>
+      <select id="n-user"></select>
+    </div>
+    <div class="field">
+      <label>Tipo</label>
+      <select id="n-type">
+        <option value="transaction">Movimiento</option>
+        <option value="transfer">Transferencia</option>
+        <option value="validation">Validación</option>
+        <option value="refusal">Cancelación</option>
+        <option value="account">Cuenta</option>
+        <option value="security">Alerta de Seguridad</option>
+      </select>
+    </div>
+    <div class="field"><label>Título</label><input type="text" id="n-title" placeholder="Ej. Su transferencia ha sido recibida" /></div>
+    <div class="field"><label>Mensaje</label><textarea id="n-message" rows="3" placeholder="Contenido del mensaje mostrado al cliente"></textarea></div>
+    <button class="btn btn-primary btn-block" id="save-notif-btn">Enviar</button>
+  </div>
+</div>
+
+<script src="../js/data-service.js"></script>
+<script src="../js/shell.js"></script>
+<script>
+let notifs = [];
+let users = [];
+let editingId = null;
+
+const TYPE_LABEL = {
+  transaction: "Movimiento", transfer: "Transferencia", validation: "Validación",
+  refusal: "Cancelación", account: "Cuenta", security: "Seguridad",
+};
+
+async function main() {
+  const ok = await Shell.requireAdminSession();
+  if (!ok) return;
+  await AdminShell.renderAdminShell("notifications");
+
+  [notifs, users] = await Promise.all([DataService.getNotifications(), DataService.getUsers()]);
+
+  const options = users.map(u => `<option value="${u.id}">${u.name}</option>`).join("");
+  document.getElementById("user-filter").innerHTML += options;
+  document.getElementById("n-user").innerHTML = options;
+
+  render();
+
+  document.getElementById("user-filter").addEventListener("change", render);
+  document.getElementById("new-notif-btn").addEventListener("click", () => { editingId = null; document.getElementById("modal-title").textContent = "Nueva Notificación"; toggleModal(true); });
+  document.getElementById("close-new").addEventListener("click", () => toggleModal(false));
+  document.getElementById("new-backdrop").addEventListener("click", (e) => { if (e.target.id === "new-backdrop") toggleModal(false); });
+  document.getElementById("save-notif-btn").addEventListener("click", saveNotif);
+}
+
+function toggleModal(open) {
+  document.getElementById("new-backdrop").classList.toggle("open", open);
+}
+
+function userName(id) {
+  const u = users.find(x => x.id === id);
+  return u ? u.name : "—";
+}
+
+function render() {
+  const filter = document.getElementById("user-filter").value;
+  const rows = filter === "all" ? notifs : notifs.filter(n => n.userId === filter);
+  const host = document.getElementById("notif-list");
+
+  if (rows.length === 0) {
+    host.innerHTML = `<div class="empty-state"><h3>No hay notificaciones.</h3><p>Cree una nueva para un cliente.</p></div>`;
+    return;
+  }
+
+  host.innerHTML = rows.map(n => `
+    <div class="notif-item ${n.read ? "" : "unread"}">
+      <div class="notif-icon">${Shell.ICONS.bell}</div>
+      <div style="flex:1;">
+        <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
+          <div>
+            <div class="notif-title">${n.title}</div>
+            <div style="font-size:11.5px; color:var(--text-low); margin-top:2px;">${userName(n.userId)}</div>
+          </div>
+          <span class="status-pill ${n.type === "refusal" ? "rejected" : n.type === "validation" ? "completed" : "pending"}" style="flex-shrink:0;">${TYPE_LABEL[n.type] || n.type}</span>
+        </div>
+        <div class="notif-msg">${n.message}</div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+          <div class="notif-time">${Shell.timeAgo(n.date)}</div>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-ghost" data-edit="${n.id}" style="padding:5px 10px; font-size:11.5px;">Editar</button>
+            <button class="btn btn-danger" data-del="${n.id}" style="padding:5px 10px; font-size:11.5px;">Eliminar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join("");
+
+  host.querySelectorAll("button[data-del]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      await DataService.deleteNotification(btn.dataset.del);
+      notifs = await DataService.getNotifications();
+      render();
+      Shell.toast("Notificación eliminada");
+    });
+  });
+
+  host.querySelectorAll("button[data-edit]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const n = notifs.find(x => x.id === btn.dataset.edit);
+      if (!n) return;
+      editingId = n.id;
+      document.getElementById("modal-title").textContent = "Editar Notificación";
+      document.getElementById("n-user").value = n.userId;
+      document.getElementById("n-type").value = n.type;
+      document.getElementById("n-title").value = n.title;
+      document.getElementById("n-message").value = n.message;
+      toggleModal(true);
+    });
+  });
+}
+
+async function saveNotif() {
+  const userId = document.getElementById("n-user").value;
+  const type = document.getElementById("n-type").value;
+  const title = document.getElementById("n-title").value.trim();
+  const message = document.getElementById("n-message").value.trim();
+  if (!userId || !title || !message) { Shell.toast("Todos los campos son obligatorios", "error"); return; }
+
+  if (editingId) {
+    await DataService.updateNotification(editingId, { userId, type, title, message });
+    Shell.toast("Notificación actualizada");
+  } else {
+    await DataService.addNotification({ userId, type, title, message });
+    Shell.toast("Notificación enviada");
+  }
+  notifs = await DataService.getNotifications();
+  render();
+  toggleModal(false);
+  document.getElementById("n-title").value = "";
+  document.getElementById("n-message").value = "";
+  editingId = null;
+}
+
+main();
+</script>
+</body>
+</html>

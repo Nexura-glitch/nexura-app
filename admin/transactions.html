@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<script>(function(){try{document.documentElement.setAttribute("data-theme", localStorage.getItem("nexura:theme")||"light");}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nexura Admin — Movimientos</title>
+<link rel="stylesheet" href="../css/style.css" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSI0IiB5MT0iNiIgeDI9IjQ0IiB5Mj0iNDIiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZjBjMTdlIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2M5NzkzYyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iMTIiIGZpbGw9InVybCgjZykiLz4KICA8cGF0aCBkPSJNMTUgMzRWMTQuNmMwLS45IDEuMDgtMS4zNiAxLjczLS43M0wzMiAyOC43VjE0IiBzdHJva2U9IiMxNDE2MWEiIHN0cm9rZS13aWR0aD0iMy42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGZpbGw9Im5vbmUiLz4KPC9zdmc+Cg==" />
+</head>
+<body>
+
+<div class="app-shell">
+  <nav class="sidebar" id="shell-sidebar"></nav>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1>Movimientos</h1>
+        <div class="subtitle">Agregue, edite o elimine movimientos de las cuentas.</div>
+      </div>
+      <div class="topbar-actions" id="shell-topbar-right"></div>
+    </div>
+
+    <div class="card card-pad reveal">
+      <div class="toolbar">
+        <select class="select-filter" id="user-filter">
+          <option value="all">Todos los clientes</option>
+        </select>
+        <select class="select-filter" id="type-filter">
+          <option value="all">Todos los tipos</option>
+          <option value="credit">Créditos</option>
+          <option value="debit">Débitos</option>
+        </select>
+        <div style="flex:1;"></div>
+        <button class="btn btn-primary" id="new-txn-btn">+ Agregar Movimiento</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Cliente</th>
+              <th>Descripción</th>
+              <th>Categoría</th>
+              <th>Monto</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+      <div id="empty-host"></div>
+    </div>
+  </main>
+</div>
+
+<!-- New/Edit transaction modal -->
+<div class="modal-backdrop" id="new-backdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modal-title">Agregar Movimiento</h3>
+      <button class="modal-close" id="close-new">&times;</button>
+    </div>
+    <div class="field">
+      <label>Cliente</label>
+      <select id="t-user"></select>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Tipo</label>
+        <select id="t-type">
+          <option value="credit">Crédito</option>
+          <option value="debit">Débito</option>
+        </select>
+      </div>
+      <div class="field"><label>Monto ($)</label><input type="number" step="0.01" id="t-amount" /></div>
+    </div>
+    <div class="field"><label>Descripción</label><input type="text" id="t-label" placeholder="Ej. Depósito de nómina" /></div>
+    <div class="field"><label>Categoría</label><input type="text" id="t-category" placeholder="Ej. Ingreso, Servicios, Compra…" /></div>
+    <span class="hint" style="display:block; margin-bottom:14px;">Agregar un movimiento ajusta automáticamente el saldo del cliente.</span>
+    <button class="btn btn-primary btn-block" id="save-txn-btn">Guardar</button>
+  </div>
+</div>
+
+<script src="../js/data-service.js"></script>
+<script src="../js/shell.js"></script>
+<script>
+let txns = [];
+let users = [];
+let editingId = null;
+
+async function main() {
+  const ok = await Shell.requireAdminSession();
+  if (!ok) return;
+  await AdminShell.renderAdminShell("transactions");
+
+  [txns, users] = await Promise.all([DataService.getTransactions(), DataService.getUsers()]);
+
+  const options = users.map(u => `<option value="${u.id}">${u.name}</option>`).join("");
+  document.getElementById("user-filter").innerHTML += options;
+  document.getElementById("t-user").innerHTML = options;
+
+  render();
+
+  document.getElementById("user-filter").addEventListener("change", render);
+  document.getElementById("type-filter").addEventListener("change", render);
+  document.getElementById("new-txn-btn").addEventListener("click", () => {
+    editingId = null;
+    document.getElementById("modal-title").textContent = "Agregar Movimiento";
+    ["t-label", "t-category", "t-amount"].forEach(id => document.getElementById(id).value = "");
+    toggleModal(true);
+  });
+  document.getElementById("close-new").addEventListener("click", () => toggleModal(false));
+  document.getElementById("new-backdrop").addEventListener("click", (e) => { if (e.target.id === "new-backdrop") toggleModal(false); });
+  document.getElementById("save-txn-btn").addEventListener("click", saveTxn);
+}
+
+function toggleModal(open) {
+  document.getElementById("new-backdrop").classList.toggle("open", open);
+}
+
+function userName(id) {
+  const u = users.find(x => x.id === id);
+  return u ? u.name : "—";
+}
+
+function render() {
+  const userFilter = document.getElementById("user-filter").value;
+  const typeFilter = document.getElementById("type-filter").value;
+
+  const rows = txns.filter(t => {
+    if (userFilter !== "all" && t.userId !== userFilter) return false;
+    if (typeFilter !== "all" && t.type !== typeFilter) return false;
+    return true;
+  });
+
+  const tbody = document.getElementById("table-body");
+  const emptyHost = document.getElementById("empty-host");
+
+  if (rows.length === 0) {
+    tbody.innerHTML = "";
+    emptyHost.innerHTML = `<div class="empty-state"><h3>No hay movimientos registrados.</h3><p>Agregue un movimiento para un cliente.</p></div>`;
+    return;
+  }
+  emptyHost.innerHTML = "";
+
+  tbody.innerHTML = rows.map(t => `
+    <tr>
+      <td>${Shell.fmtDate(t.date)}</td>
+      <td>${userName(t.userId)}</td>
+      <td>${t.label}</td>
+      <td>${t.category || "—"}</td>
+      <td class="num"><span class="txn-amount ${t.type}">${t.type === "credit" ? "+" : "−"}${Shell.fmtUSD(t.amount)}</span></td>
+      <td>
+        <button class="btn btn-danger" data-del="${t.id}" style="padding:6px 10px; font-size:12px;">Eliminar</button>
+      </td>
+    </tr>
+  `).join("");
+
+  tbody.querySelectorAll("button[data-del]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      await DataService.deleteTransaction(btn.dataset.del);
+      txns = await DataService.getTransactions();
+      users = await DataService.getUsers();
+      render();
+      Shell.toast("Movimiento eliminado y saldo revertido");
+    });
+  });
+}
+
+async function saveTxn() {
+  const userId = document.getElementById("t-user").value;
+  const type = document.getElementById("t-type").value;
+  const amount = parseFloat(document.getElementById("t-amount").value);
+  const label = document.getElementById("t-label").value.trim();
+  const category = document.getElementById("t-category").value.trim();
+
+  if (!userId || !amount || !label) { Shell.toast("Faltan campos obligatorios", "error"); return; }
+
+  await DataService.addTransaction({ userId, type, amount, label, category, status: "completed" });
+  await DataService.addNotification({
+    userId, type: "transaction",
+    title: type === "credit" ? "Nuevo crédito registrado" : "Nuevo débito registrado",
+    message: `${label} — ${Shell.fmtUSD(amount)}`,
+  });
+  Shell.toast("Movimiento agregado");
+
+  txns = await DataService.getTransactions();
+  users = await DataService.getUsers();
+  render();
+  toggleModal(false);
+}
+
+main();
+</script>
+</body>
+</html>

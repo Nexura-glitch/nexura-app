@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<script>(function(){try{document.documentElement.setAttribute("data-theme", localStorage.getItem("nexura:theme")||"light");}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nexura Admin — Tarjetas</title>
+<link rel="stylesheet" href="../css/style.css" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSI0IiB5MT0iNiIgeDI9IjQ0IiB5Mj0iNDIiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZjBjMTdlIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2M5NzkzYyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iMTIiIGZpbGw9InVybCgjZykiLz4KICA8cGF0aCBkPSJNMTUgMzRWMTQuNmMwLS45IDEuMDgtMS4zNiAxLjczLS43M0wzMiAyOC43VjE0IiBzdHJva2U9IiMxNDE2MWEiIHN0cm9rZS13aWR0aD0iMy42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGZpbGw9Im5vbmUiLz4KPC9zdmc+Cg==" />
+</head>
+<body>
+
+<div class="app-shell">
+  <nav class="sidebar" id="shell-sidebar"></nav>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1>Tarjetas</h1>
+        <div class="subtitle">Active, congele y ajuste los límites de las tarjetas de cada cliente.</div>
+      </div>
+      <div class="topbar-actions" id="shell-topbar-right"></div>
+    </div>
+
+    <div class="card card-pad reveal">
+      <div class="toolbar">
+        <div class="search-box">
+          <input type="text" id="search-input" placeholder="Buscar cliente…" />
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Débito</th>
+              <th>Límite Débito</th>
+              <th>Virtual</th>
+              <th>Límite Virtual</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+      <div id="empty-host"></div>
+    </div>
+  </main>
+</div>
+
+<!-- Manage modal -->
+<div class="modal-backdrop" id="edit-backdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Gestionar Tarjetas</h3>
+      <button class="modal-close" id="close-edit">&times;</button>
+    </div>
+
+    <div class="section-title" style="margin-bottom:8px;"><h2 style="font-size:13.5px;">Tarjeta de Débito</h2></div>
+    <div class="tarjeta-row">
+      <div class="lbl">Activa</div>
+      <div class="toggle-switch" id="debit-active-toggle"></div>
+    </div>
+    <div class="tarjeta-row">
+      <div class="lbl">Congelada</div>
+      <div class="toggle-switch" id="debit-freeze-toggle"></div>
+    </div>
+    <div class="field" style="margin-top:12px;">
+      <label>Límite de Gasto Mensual ($)</label>
+      <input type="number" step="10" id="debit-limit" />
+    </div>
+
+    <div style="border-top:1px solid var(--line); margin:18px 0;"></div>
+
+    <div class="section-title" style="margin-bottom:8px;"><h2 style="font-size:13.5px;">Tarjeta Virtual</h2></div>
+    <div class="tarjeta-row">
+      <div class="lbl">Activa</div>
+      <div class="toggle-switch" id="virtual-active-toggle"></div>
+    </div>
+    <div class="tarjeta-row">
+      <div class="lbl">Congelada</div>
+      <div class="toggle-switch" id="virtual-freeze-toggle"></div>
+    </div>
+    <div class="field" style="margin-top:12px;">
+      <label>Límite de Gasto Mensual ($)</label>
+      <input type="number" step="10" id="virtual-limit" />
+    </div>
+
+    <button class="btn btn-primary btn-block" id="save-btn" style="margin-top:8px;">Guardar Cambios</button>
+  </div>
+</div>
+
+<script src="../js/data-service.js"></script>
+<script src="../js/shell.js"></script>
+<script>
+let users = [];
+let editingId = null;
+let toggles = {};
+
+async function main() {
+  const ok = await Shell.requireAdminSession();
+  if (!ok) return;
+  await AdminShell.renderAdminShell("cards");
+
+  users = await DataService.getUsers();
+  render();
+
+  document.getElementById("search-input").addEventListener("input", render);
+  document.getElementById("close-edit").addEventListener("click", () => toggleModal(false));
+  document.getElementById("edit-backdrop").addEventListener("click", (e) => { if (e.target.id === "edit-backdrop") toggleModal(false); });
+  document.getElementById("save-btn").addEventListener("click", saveCards);
+
+  toggles.debitActive = wireToggle("debit-active-toggle");
+  toggles.debitFreeze = wireToggle("debit-freeze-toggle");
+  toggles.virtualActive = wireToggle("virtual-active-toggle");
+  toggles.virtualFreeze = wireToggle("virtual-freeze-toggle");
+}
+
+function wireToggle(id) {
+  const el = document.getElementById(id);
+  let state = false;
+  el.onclick = () => { state = !state; el.classList.toggle("on", state); };
+  return { set: (val) => { state = !!val; el.classList.toggle("on", state); }, get: () => state };
+}
+
+function toggleModal(open) {
+  document.getElementById("edit-backdrop").classList.toggle("open", open);
+}
+
+function render() {
+  const q = document.getElementById("search-input").value.trim().toLowerCase();
+  const rows = users.filter(u => !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
+  const tbody = document.getElementById("table-body");
+  const emptyHost = document.getElementById("empty-host");
+
+  if (rows.length === 0) {
+    tbody.innerHTML = "";
+    emptyHost.innerHTML = `<div class="empty-state"><h3>Sin resultados</h3></div>`;
+    return;
+  }
+  emptyHost.innerHTML = "";
+
+  tbody.innerHTML = rows.map(u => `
+    <tr>
+      <td>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div class="avatar" style="width:32px;height:32px;font-size:11px;">${Shell.initials(u.name)}</div>
+          <div>
+            <div style="font-weight:500;">${u.name}</div>
+            <div style="font-size:11.5px; color:var(--text-low);">${u.email}</div>
+          </div>
+        </div>
+      </td>
+      <td><span class="status-pill ${u.debitCardActive && !u.debitCardFrozen ? "completed" : "rejected"}">${!u.debitCardActive ? "Inactiva" : u.debitCardFrozen ? "Congelada" : "Activa"}</span></td>
+      <td class="num">${Shell.fmtUSD(u.debitLimit || 0)}</td>
+      <td><span class="status-pill ${u.virtualCardActive && !u.virtualCardFrozen ? "completed" : "rejected"}">${!u.virtualCardActive ? "Inactiva" : u.virtualCardFrozen ? "Congelada" : "Activa"}</span></td>
+      <td class="num">${Shell.fmtUSD(u.virtualLimit || 0)}</td>
+      <td><button class="btn btn-ghost" data-id="${u.id}" style="padding:7px 14px; font-size:12.5px;">Gestionar</button></td>
+    </tr>
+  `).join("");
+
+  tbody.querySelectorAll("button[data-id]").forEach(btn => {
+    btn.addEventListener("click", () => openEdit(btn.dataset.id));
+  });
+}
+
+function openEdit(id) {
+  const u = users.find(x => x.id === id);
+  if (!u) return;
+  editingId = id;
+  toggles.debitActive.set(u.debitCardActive);
+  toggles.debitFreeze.set(u.debitCardFrozen);
+  toggles.virtualActive.set(u.virtualCardActive);
+  toggles.virtualFreeze.set(u.virtualCardFrozen);
+  document.getElementById("debit-limit").value = u.debitLimit || 0;
+  document.getElementById("virtual-limit").value = u.virtualLimit || 0;
+  toggleModal(true);
+}
+
+async function saveCards() {
+  if (!editingId) return;
+  await DataService.updateUser(editingId, {
+    debitCardActive: toggles.debitActive.get(),
+    debitCardFrozen: toggles.debitFreeze.get(),
+    virtualCardActive: toggles.virtualActive.get(),
+    virtualCardFrozen: toggles.virtualFreeze.get(),
+    debitLimit: parseFloat(document.getElementById("debit-limit").value) || 0,
+    virtualLimit: parseFloat(document.getElementById("virtual-limit").value) || 0,
+  });
+  await DataService.addNotification({
+    userId: editingId,
+    type: "account",
+    title: "Tarjetas actualizadas",
+    message: "La configuración de sus tarjetas fue actualizada por la administración.",
+  });
+  users = await DataService.getUsers();
+  render();
+  toggleModal(false);
+  Shell.toast("Tarjetas actualizadas");
+}
+
+main();
+</script>
+</body>
+</html>

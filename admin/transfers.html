@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<script>(function(){try{document.documentElement.setAttribute("data-theme", localStorage.getItem("nexura:theme")||"light");}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nexura Admin — Transferencias</title>
+<link rel="stylesheet" href="../css/style.css" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSI0IiB5MT0iNiIgeDI9IjQ0IiB5Mj0iNDIiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZjBjMTdlIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2M5NzkzYyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iMTIiIGZpbGw9InVybCgjZykiLz4KICA8cGF0aCBkPSJNMTUgMzRWMTQuNmMwLS45IDEuMDgtMS4zNiAxLjczLS43M0wzMiAyOC43VjE0IiBzdHJva2U9IiMxNDE2MWEiIHN0cm9rZS13aWR0aD0iMy42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGZpbGw9Im5vbmUiLz4KPC9zdmc+Cg==" />
+</head>
+<body>
+
+<div class="app-shell">
+  <nav class="sidebar" id="shell-sidebar"></nav>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1>Transferencias</h1>
+        <div class="subtitle">Cree transferencias y actualice su estado.</div>
+      </div>
+      <div class="topbar-actions" id="shell-topbar-right"></div>
+    </div>
+
+    <div class="card card-pad reveal">
+      <div class="toolbar">
+        <div class="search-box">
+          <input type="text" id="search-input" placeholder="Referencia, destinatario, cliente…" />
+        </div>
+        <select class="select-filter" id="status-filter">
+          <option value="all">Todos los estados</option>
+          <option value="pending">Pendiente</option>
+          <option value="review">En Revisión</option>
+          <option value="verified">Verificado</option>
+          <option value="processing">Procesando</option>
+          <option value="transferred">Transferido</option>
+          <option value="completed">Completado</option>
+          <option value="cancelled">Cancelado</option>
+        </select>
+        <button class="btn btn-primary" id="new-transfer-btn">+ Crear Transferencia</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Referencia</th>
+              <th>Cliente</th>
+              <th>Destinatario</th>
+              <th>Monto</th>
+              <th>Fecha</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+      <div id="empty-host"></div>
+    </div>
+  </main>
+</div>
+
+<!-- New transfer modal -->
+<div class="modal-backdrop" id="new-backdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Crear Transferencia</h3>
+      <button class="modal-close" id="close-new">&times;</button>
+    </div>
+    <div class="field">
+      <label>Cliente</label>
+      <select id="t-user"></select>
+    </div>
+    <div class="field"><label>Nombre del Titular</label><input type="text" id="t-benef" /></div>
+    <div class="field"><label>Número de Cuenta</label><input type="text" id="t-account" /></div>
+    <div class="field-row">
+      <div class="field"><label>Banco Receptor</label><input type="text" id="t-bank" placeholder="Ej. Banco Nacional" /></div>
+      <div class="field">
+        <label>Tipo de Cuenta</label>
+        <select id="t-account-type">
+          <option value="Cuenta Corriente">Cuenta Corriente</option>
+          <option value="Cuenta de Ahorros">Cuenta de Ahorros</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Monto ($)</label><input type="number" step="0.01" id="t-amount" /></div>
+      <div class="field">
+        <label>Estado Inicial</label>
+        <select id="t-status">
+          <option value="pending">Pendiente</option>
+          <option value="review">En Revisión</option>
+          <option value="verified">Verificado</option>
+          <option value="processing">Procesando</option>
+          <option value="transferred">Transferido</option>
+          <option value="completed">Completado</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label>Motivo</label><input type="text" id="t-note" placeholder="Opcional" /></div>
+    <span class="hint" style="display:block; margin-bottom:14px;">El estado «Completado» debita de inmediato el saldo disponible del cliente.</span>
+    <button class="btn btn-primary btn-block" id="create-transfer-btn">Crear</button>
+  </div>
+</div>
+
+<!-- Edit status modal -->
+<div class="modal-backdrop" id="status-backdrop">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-head">
+      <h3>Cambiar Estado</h3>
+      <button class="modal-close" id="close-status">&times;</button>
+    </div>
+    <div class="field">
+      <label>Nuevo estado</label>
+      <select id="s-status"></select>
+    </div>
+    <button class="btn btn-primary btn-block" id="apply-status-btn">Aplicar</button>
+  </div>
+</div>
+
+<script src="../js/data-service.js"></script>
+<script src="../js/shell.js"></script>
+<script>
+let transfers = [];
+let users = [];
+let statusEditId = null;
+
+async function main() {
+  const ok = await Shell.requireAdminSession();
+  if (!ok) return;
+  await AdminShell.renderAdminShell("transfers");
+
+  [transfers, users] = await Promise.all([DataService.getTransfers(), DataService.getUsers()]);
+  document.getElementById("t-user").innerHTML = users.map(u => `<option value="${u.id}">${u.name}</option>`).join("");
+  document.getElementById("s-status").innerHTML = DataService.STATUS_ORDER.map(s => `<option value="${s}">${DataService.STATUS_LABELS[s]}</option>`).join("");
+
+  render();
+
+  document.getElementById("search-input").addEventListener("input", render);
+  document.getElementById("status-filter").addEventListener("change", render);
+  document.getElementById("new-transfer-btn").addEventListener("click", () => toggleModal("new-backdrop", true));
+  document.getElementById("close-new").addEventListener("click", () => toggleModal("new-backdrop", false));
+  document.getElementById("new-backdrop").addEventListener("click", (e) => { if (e.target.id === "new-backdrop") toggleModal("new-backdrop", false); });
+  document.getElementById("create-transfer-btn").addEventListener("click", createTransfer);
+
+  document.getElementById("close-status").addEventListener("click", () => toggleModal("status-backdrop", false));
+  document.getElementById("status-backdrop").addEventListener("click", (e) => { if (e.target.id === "status-backdrop") toggleModal("status-backdrop", false); });
+  document.getElementById("apply-status-btn").addEventListener("click", applyStatus);
+}
+
+function toggleModal(id, open) {
+  document.getElementById(id).classList.toggle("open", open);
+}
+
+function userName(id) {
+  const u = users.find(x => x.id === id);
+  return u ? u.name : "—";
+}
+
+function pillClass(status) {
+  if (status === "completed" || status === "transferred") return "completed";
+  if (status === "cancelled") return "rejected";
+  return "pending";
+}
+
+function render() {
+  const q = document.getElementById("search-input").value.trim().toLowerCase();
+  const status = document.getElementById("status-filter").value;
+
+  const rows = transfers.filter(t => {
+    if (status !== "all" && t.status !== status) return false;
+    if (!q) return true;
+    const hay = `${t.reference} ${t.beneficiaryName} ${userName(t.userId)}`.toLowerCase();
+    return hay.includes(q);
+  });
+
+  const tbody = document.getElementById("table-body");
+  const emptyHost = document.getElementById("empty-host");
+
+  if (rows.length === 0) {
+    tbody.innerHTML = "";
+    emptyHost.innerHTML = `<div class="empty-state"><h3>No hay transferencias registradas.</h3><p>Ajuste su búsqueda o cree una nueva transferencia.</p></div>`;
+    return;
+  }
+  emptyHost.innerHTML = "";
+
+  tbody.innerHTML = rows.map(t => `
+    <tr>
+      <td class="mono">${t.reference}</td>
+      <td>${userName(t.userId)}</td>
+      <td>${t.beneficiaryName}</td>
+      <td class="num">${Shell.fmtUSD(t.amount)}</td>
+      <td>${Shell.fmtDate(t.date)}</td>
+      <td><span class="status-pill ${pillClass(t.status)}">${DataService.STATUS_LABELS[t.status] || t.status}</span></td>
+      <td><button class="btn btn-ghost" data-id="${t.id}" style="padding:6px 12px; font-size:12px;">Cambiar Estado</button></td>
+    </tr>
+  `).join("");
+
+  tbody.querySelectorAll("button[data-id]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      statusEditId = btn.dataset.id;
+      const t = transfers.find(x => x.id === statusEditId);
+      document.getElementById("s-status").value = t.status;
+      toggleModal("status-backdrop", true);
+    });
+  });
+}
+
+async function applyStatus() {
+  if (!statusEditId) return;
+  const status = document.getElementById("s-status").value;
+  await DataService.updateTransferStatus(statusEditId, status);
+  transfers = await DataService.getTransfers();
+  render();
+  toggleModal("status-backdrop", false);
+  Shell.toast("Estado actualizado");
+}
+
+async function createTransfer() {
+  const userId = document.getElementById("t-user").value;
+  const beneficiaryName = document.getElementById("t-benef").value.trim();
+  const beneficiaryAccount = document.getElementById("t-account").value.trim();
+  const beneficiaryBank = document.getElementById("t-bank").value.trim();
+  const accountType = document.getElementById("t-account-type").value;
+  const amount = parseFloat(document.getElementById("t-amount").value);
+  const status = document.getElementById("t-status").value;
+  const note = document.getElementById("t-note").value.trim();
+
+  if (!userId || !beneficiaryName || !amount) { Shell.toast("Faltan campos obligatorios", "error"); return; }
+
+  try {
+    await DataService.createTransfer({ userId, beneficiaryName, beneficiaryAccount, beneficiaryBank, accountType, amount, note, status });
+    transfers = await DataService.getTransfers();
+    render();
+    toggleModal("new-backdrop", false);
+    ["t-benef", "t-account", "t-bank", "t-amount", "t-note"].forEach(id => document.getElementById(id).value = "");
+    Shell.toast("Transferencia creada");
+  } catch (err) {
+    Shell.toast(err.message || "Error al crear la transferencia", "error");
+  }
+}
+
+main();
+</script>
+</body>
+</html>

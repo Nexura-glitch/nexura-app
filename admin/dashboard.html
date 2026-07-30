@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<script>(function(){try{document.documentElement.setAttribute("data-theme", localStorage.getItem("nexura:theme")||"light");}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nexura Admin — Resumen General</title>
+<link rel="stylesheet" href="../css/style.css" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSI0IiB5MT0iNiIgeDI9IjQ0IiB5Mj0iNDIiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZjBjMTdlIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2M5NzkzYyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iMTIiIGZpbGw9InVybCgjZykiLz4KICA8cGF0aCBkPSJNMTUgMzRWMTQuNmMwLS45IDEuMDgtMS4zNiAxLjczLS43M0wzMiAyOC43VjE0IiBzdHJva2U9IiMxNDE2MWEiIHN0cm9rZS13aWR0aD0iMy42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGZpbGw9Im5vbmUiLz4KPC9zdmc+Cg==" />
+</head>
+<body>
+
+<div class="app-shell">
+  <nav class="sidebar" id="shell-sidebar"></nav>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1>Resumen General</h1>
+        <div class="subtitle">Actividad global de la plataforma.</div>
+      </div>
+      <div class="topbar-actions" id="shell-topbar-right"></div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="card stat-card reveal d1">
+        <div class="stat-head"><div class="stat-label">Total Usuarios</div><div class="stat-icon"></div></div>
+        <div class="stat-value" id="stat-users">—</div>
+        <div class="trend up">cuentas activas</div>
+      </div>
+      <div class="card stat-card reveal d2">
+        <div class="stat-head"><div class="stat-label">Total Transferencias</div><div class="stat-icon"></div></div>
+        <div class="stat-value" id="stat-transfers">—</div>
+        <div class="trend up">en total</div>
+      </div>
+      <div class="card stat-card reveal d3">
+        <div class="stat-head"><div class="stat-label">Volumen Total</div><div class="stat-icon"></div></div>
+        <div class="stat-value" id="stat-volume">—</div>
+        <div class="trend up">acumulado en transferencias</div>
+      </div>
+      <div class="card stat-card reveal d4">
+        <div class="stat-head"><div class="stat-label">Saldo Total</div><div class="stat-icon"></div></div>
+        <div class="stat-value" id="stat-balance">—</div>
+        <div class="trend up">acumulado de clientes</div>
+      </div>
+      <div class="card stat-card reveal d4">
+        <div class="stat-head"><div class="stat-label">Movimientos Totales</div><div class="stat-icon"></div></div>
+        <div class="stat-value" id="stat-movements">—</div>
+        <div class="trend up">actividad de la plataforma</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card card-pad reveal">
+        <div class="section-title"><h2>Actividad Reciente</h2></div>
+        <div id="activity-list"></div>
+      </div>
+      <div class="card card-pad reveal d1">
+        <div class="section-title"><h2>Usuarios</h2></div>
+        <div id="users-list"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../js/data-service.js"></script>
+<script src="../js/shell.js"></script>
+<script>
+async function main() {
+  const ok = await Shell.requireAdminSession();
+  if (!ok) return;
+  await AdminShell.renderAdminShell("dashboard");
+
+  document.querySelectorAll(".stat-icon").forEach(el => el.innerHTML = Shell.ICONS.up);
+  document.getElementById("activity-list").innerHTML = Shell.skeletonRows(4);
+  document.getElementById("users-list").innerHTML = Shell.skeletonRows(4);
+  await Shell.wait(300);
+
+  const stats = await DataService.getGlobalStats();
+  document.getElementById("stat-users").textContent = stats.userCount;
+  document.getElementById("stat-transfers").textContent = stats.transferCount;
+  document.getElementById("stat-volume").textContent = Shell.fmtUSD(stats.totalVolume);
+  document.getElementById("stat-balance").textContent = Shell.fmtUSD(stats.totalBalance);
+  document.getElementById("stat-movements").textContent = stats.transactionCount;
+
+  const [transfers, users] = await Promise.all([DataService.getTransfers(), DataService.getUsers()]);
+  const recent = transfers.slice(0, 6);
+  const activityHost = document.getElementById("activity-list");
+  activityHost.innerHTML = recent.length ? recent.map(t => `
+    <div class="txn-row">
+      <div class="txn-icon">→</div>
+      <div class="txn-main">
+        <div class="txn-label">${t.beneficiaryName} · ${t.reference}</div>
+        <div class="txn-sub">${Shell.fmtDateTime(t.date)}</div>
+      </div>
+      <div class="txn-amount debit">${Shell.fmtUSD(t.amount)}</div>
+    </div>
+  `).join("") : `<div class="empty-state"><h3>No hay actividad reciente.</h3></div>`;
+
+  const usersHost = document.getElementById("users-list");
+  usersHost.innerHTML = users.map(u => `
+    <div class="txn-row">
+      <div class="txn-icon">${Shell.initials(u.name)}</div>
+      <div class="txn-main">
+        <div class="txn-label">${u.name}</div>
+        <div class="txn-sub">${u.email}</div>
+      </div>
+      <div class="txn-amount credit">${Shell.fmtUSD(u.balance)}</div>
+    </div>
+  `).join("");
+}
+main();
+</script>
+</body>
+</html>
