@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Diagnóstico Nexura</title>
+<style>
+  body { font-family: monospace; background:#111; color:#0f0; padding:20px; font-size:14px; line-height:1.6; }
+  h1 { color:#fff; font-size:16px; }
+  .ok { color:#4ade9a; }
+  .err { color:#f2695c; }
+  pre { white-space: pre-wrap; word-break: break-all; }
+</style>
+</head>
+<body>
+<h1>Diagnóstico de conexión Nexura</h1>
+<div id="out">Probando…</div>
+
+<script>
+const API_BASE = "https://nexura-backend-k7dc.onrender.com/api";
+const out = document.getElementById("out");
+
+function log(msg, cls) {
+  const p = document.createElement("pre");
+  if (cls) p.className = cls;
+  p.textContent = msg;
+  out.appendChild(p);
+}
+
+async function run() {
+  log("Origen de esta página: " + window.location.origin);
+  log("Probando GET " + API_BASE + "/health ...");
+
+  try {
+    const res = await fetch(API_BASE + "/health");
+    const data = await res.json();
+    log("✔ /health respondió: " + JSON.stringify(data), "ok");
+  } catch (err) {
+    log("✘ /health FALLÓ", "err");
+    log("Tipo: " + err.name, "err");
+    log("Mensaje: " + err.message, "err");
+  }
+
+  log("---");
+  log("Probando POST " + API_BASE + "/auth/admin-login ...");
+
+  try {
+    const res = await fetch(API_BASE + "/auth/admin-login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: "test@test.com", password: "test" }),
+    });
+    const data = await res.json().catch(() => null);
+    log("✔ La petición llegó al servidor. Código: " + res.status, "ok");
+    log("Respuesta: " + JSON.stringify(data), "ok");
+  } catch (err) {
+    log("✘ POST /auth/admin-login FALLÓ", "err");
+    log("Tipo: " + err.name, "err");
+    log("Mensaje: " + err.message, "err");
+  }
+}
+
+run();
+</script>
+</body>
+</html>
